@@ -31,3 +31,7 @@ Thumbs.db
 # Database
 *.db
 *.sqlite
+
+# ChromaDB
+chroma_db/
+backend/chroma_db/
