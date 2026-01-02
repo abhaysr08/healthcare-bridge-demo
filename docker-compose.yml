@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: healthcare-backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MODEL_NAME=${MODEL_NAME:-mistral-small-latest}
+      - HOST=0.0.0.0
+      - PORT=8000
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+    volumes:
+      - ./backend/data:/app/data:ro
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./healthcare-ui
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+        - VITE_APP_NAME=${VITE_APP_NAME:-Healthcare Bridge}
+        - VITE_APP_SUBTITLE=${VITE_APP_SUBTITLE:-Assistente Cure Domiciliari}
+    container_name: healthcare-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+

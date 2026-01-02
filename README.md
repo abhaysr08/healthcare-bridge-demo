@@ -39,7 +39,32 @@ healthcare-bridge-demo/
 
 ## Quick Start
 
-### Step 1: Configure Environment Variables
+### Option 1: Docker Compose (Recommended)
+
+1. **Create `.env` file in the root directory:**
+   ```bash
+   # Copy the example and update with your values
+   cp .env.example .env
+   # Edit .env and add your MISTRAL_API_KEY
+   ```
+
+2. **Start all services:**
+   ```bash
+   docker-compose up --build
+   ```
+
+3. **Access the application:**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+
+4. **Stop services:**
+   ```bash
+   docker-compose down
+   ```
+
+### Option 2: Manual Setup
+
+#### Step 1: Configure Environment Variables
 
 **Backend:**
 ```bash
@@ -55,7 +80,7 @@ cd healthcare-ui
 # For a new setup, copy .env.example to .env and update values
 ```
 
-### Step 2: Start Backend (Terminal 1)
+#### Step 2: Start Backend (Terminal 1)
 
 ```bash
 cd backend
@@ -64,7 +89,7 @@ cd backend
 
 You should see: `INFO: Uvicorn running on http://127.0.0.1:8000`
 
-### Step 3: Start Frontend (Terminal 2 - New Tab)
+#### Step 3: Start Frontend (Terminal 2 - New Tab)
 
 ```bash
 cd healthcare-ui
@@ -73,7 +98,7 @@ npm run dev
 
 You should see: `Local: http://localhost:3000/`
 
-### Step 4: Open Browser
+#### Step 4: Open Browser
 
 Go to **http://localhost:3000** and start chatting!
 
@@ -137,7 +162,32 @@ The system understands and can answer questions about all 48 patient fields:
 
 ## Environment Configuration
 
-### Backend (.env)
+### Single .env File (Root Directory)
+
+For Docker Compose, create a single `.env` file in the root directory:
+
+```bash
+# Backend Configuration
+MISTRAL_API_KEY=your-mistral-api-key-here
+MODEL_NAME=mistral-small-latest
+HOST=0.0.0.0
+BACKEND_PORT=8000
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+
+# Frontend Configuration
+VITE_API_URL=http://localhost:8000
+VITE_APP_NAME=Healthcare Bridge
+VITE_APP_SUBTITLE=Assistente Cure Domiciliari
+FRONTEND_PORT=3000
+```
+
+**Note**: The `.env` file is in `.gitignore` and won't be committed. Copy `.env.example` to `.env` and update with your values.
+
+### Manual Setup (Separate .env files)
+
+If running manually without Docker, you can use separate `.env` files:
+
+**Backend (`backend/.env`):**
 ```bash
 # Mistral AI Configuration
 MISTRAL_API_KEY=your-mistral-api-key-here
@@ -151,14 +201,12 @@ PORT=8000
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
 
-### Frontend (.env)
+**Frontend (`healthcare-ui/.env`):**
 ```bash
 VITE_API_URL=http://127.0.0.1:8000
 VITE_APP_NAME=Healthcare Bridge
 VITE_APP_SUBTITLE=Assistente Cure Domiciliari
 ```
-
-**Note**: `.env` files are in `.gitignore` and won't be committed. Use `.env.example` as a template.
 
 ## Troubleshooting
 
