@@ -6,7 +6,7 @@ import './Chatbot.css';
 const API_URL = import.meta.env.VITE_API_URL;
 const APP_NAME = import.meta.env.VITE_APP_NAME;
 const APP_SUBTITLE = import.meta.env.VITE_APP_SUBTITLE;
-const WELCOME_MESSAGE = `Welcome to ${APP_NAME}! I'm your AI assistant for home-care patient management. I have access to comprehensive patient records and can help you with medical histories, current treatments, care plans, and administrative details. Feel free to ask me about any patient or search across our entire database.`;
+const WELCOME_MESSAGE = `Benvenuto in ${APP_NAME}! Sono il tuo assistente AI per la gestione dei pazienti in assistenza domiciliare. Ho accesso a informazioni complete sui pazienti e posso aiutarti con storie cliniche, trattamenti attuali, piani di cura e dettagli amministrativi. Sentiti libero di chiedere informazioni su qualsiasi paziente o di cercare nel nostro database completo.`;
 
 function Chatbot() {
   const [messages, setMessages] = useState([

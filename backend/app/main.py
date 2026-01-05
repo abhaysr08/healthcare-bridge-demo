@@ -97,8 +97,8 @@ async def chat(request: ChatRequest):
                 detail="Vector store not initialized. Please wait or restart the server."
             )
 
-        search_results = vector_store.search_patients(query=request.message, top_k=3)
-        context = create_context_from_results(search_results, request.message)
+        search_results = vector_store.search_patients(query=request.message, top_k=10)
+        context = create_context_from_results(search_results, request.message, all_patients_data=PATIENTS_DATA)
         system_prompt = get_system_prompt(len(PATIENTS_DATA))
 
         messages = [

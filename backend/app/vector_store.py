@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import List
+from datetime import datetime
 import chromadb
 from mistralai import Mistral
 from .utils import create_patient_summary
@@ -117,34 +118,115 @@ class VectorStoreManager:
         return self.patients_data[patient_id]
 
 
-def create_context_from_results(results: List[dict], query: str) -> str:
+def create_context_from_results(results: List[dict], query: str, all_patients_data: List[dict] = None) -> str:
+    """
+    Create context from search results.
+    For analytics/statistics queries, provides complete database with essential fields.
+    For specific patient queries, provides top matches.
+    """
+
+    analytics_keywords = [
+        'how many', 'quanti', 'count', 'conta', 'list', 'lista', 'elenca',
+        'all patients', 'tutti i pazienti', 'patients', 'pazienti',
+        'receiving', 'ricevono', 'taking', 'prendono', 'with', 'con',
+        'their names', 'i nomi', 'i loro nomi', 'give me', 'dammi',
+        'tell me', 'dimmi', 'show', 'mostra', 'provide', 'fornisci',
+        'which', 'quali', 'who', 'chi', 'over', 'oltre', 'under', 'sotto',
+        'years old', 'anni', 'age', 'età', 'elderly', 'anziani', 'older', 'younger',
+        'live in', 'lives in', 'residing', 'reside', 'vivono', 'abita', 'abitano',
+        'enrolled', 'iscritti', 'iscritt'
+    ]
+
+    query_lower = query.lower()
+    is_analytics_query = any(keyword in query_lower for keyword in analytics_keywords)
+
+    if is_analytics_query and all_patients_data:
+        def calculate_age(birth_date_str):
+            try:
+                birth_date = datetime.strptime(birth_date_str, "%d/%m/%Y")
+                today = datetime.now()
+                age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
+                return age
+            except:
+                return None
+
+        filtered_patients = all_patients_data
+        filter_applied = "No filter"
+
+        if 'female' in query_lower or 'women' in query_lower or 'femmine' in query_lower or 'donne' in query_lower:
+            filtered_patients = [p for p in all_patients_data if p.get('Sesso') == 'F']
+            filter_applied = "Gender = Female (Sesso = 'F')"
+        elif 'male' in query_lower or 'men' in query_lower or 'maschi' in query_lower or 'uomini' in query_lower:
+            filtered_patients = [p for p in all_patients_data if p.get('Sesso') == 'M']
+            filter_applied = "Gender = Male (Sesso = 'M')"
+
+        elif 'home care' in query_lower or 'cure domiciliari' in query_lower or 'domiciliar' in query_lower:
+            filtered_patients = [p for p in all_patients_data if p.get('Cure_domiciliari_attive') == 'Si']
+            filter_applied = "Home Care Active (Cure_domiciliari_attive = 'Si')"
+
+        elif 'palliative' in query_lower or 'palliativ' in query_lower:
+            filtered_patients = [p for p in all_patients_data if p.get('Cure_palliative') == 'Si']
+            filter_applied = "Palliative Care (Cure_palliative = 'Si')"
+
+        elif 'misura b1' in query_lower or 'b1' in query_lower:
+            filtered_patients = [p for p in all_patients_data if p.get('Misura_B1_attiva') == 'Si']
+            filter_applied = "Misura B1 Active (Misura_B1_attiva = 'Si')"
+
+        elif 'caregiver' in query_lower or 'badante' in query_lower:
+            filtered_patients = [p for p in all_patients_data if p.get('Caregiver_nome')]
+            filter_applied = "Has Caregiver (Caregiver_nome is not empty)"
+
+        elif 'over 90' in query_lower or 'oltre 90' in query_lower or 'più di 90' in query_lower:
+            filtered_patients = [p for p in all_patients_data if calculate_age(p.get('Data_nascita', '')) and calculate_age(p.get('Data_nascita', '')) > 90]
+            filter_applied = "Age > 90 years"
+        elif 'over 80' in query_lower or 'oltre 80' in query_lower or 'più di 80' in query_lower:
+            filtered_patients = [p for p in all_patients_data if calculate_age(p.get('Data_nascita', '')) and calculate_age(p.get('Data_nascita', '')) > 80]
+            filter_applied = "Age > 80 years"
+        elif 'over 70' in query_lower or 'oltre 70' in query_lower or 'più di 70' in query_lower:
+            filtered_patients = [p for p in all_patients_data if calculate_age(p.get('Data_nascita', '')) and calculate_age(p.get('Data_nascita', '')) > 70]
+            filter_applied = "Age > 70 years"
+        elif 'elderly' in query_lower or 'anziani' in query_lower or 'anziane' in query_lower:
+            filtered_patients = [p for p in all_patients_data if calculate_age(p.get('Data_nascita', '')) and calculate_age(p.get('Data_nascita', '')) >= 65]
+            filter_applied = "Age >= 65 years (elderly)"
+
+        else:
+            cities = ['napoli', 'roma', 'milano', 'torino', 'firenze', 'bologna', 'genova', 'bari']
+            for city in cities:
+                if city in query_lower:
+                    filtered_patients = [p for p in all_patients_data if p.get('Residenza', '').lower() == city.capitalize()]
+                    filter_applied = f"Residence = {city.capitalize()}"
+                    break
+
+        names_list = [f"{p.get('Nome')} {p.get('Cognome')}" for p in filtered_patients]
+
+        context = f"\n\n**BACKEND FILTERED RESULTS:**\n"
+        context += f"Filter applied: {filter_applied}\n"
+        context += f"**EXACT COUNT: {len(filtered_patients)} patients**\n\n"
+        context += f"**Complete list of {len(filtered_patients)} patient names:**\n"
+        for name in names_list:
+            context += f"- {name}\n"
+        context += f"\n**CRITICAL: Report these EXACT {len(filtered_patients)} names. Do NOT add, remove, or modify any names.**"
+        return context
+
     if not results:
         return "\n\n**No relevant patients found in the database.**"
 
     top_similarity = results[0]['similarity']
 
-    if top_similarity >= 0.8:
+    if top_similarity >= 0.5:
         patient = results[0]['patient']
         context = f"\n\n**Most Relevant Patient (confidence: {top_similarity:.2%}):**\n```json\n{json.dumps(patient, ensure_ascii=False, indent=2)}\n```"
-        return context
 
-    elif top_similarity >= 0.6:
-        summaries = []
-        for i, result in enumerate(results[:3], 1):
-            patient = result['patient']
-            summary = {
-                "Nome": patient.get("Nome"),
-                "Cognome": patient.get("Cognome"),
-                "Residenza": patient.get("Residenza"),
-                "Ricoveri_allergie_quali": patient.get("Ricoveri_allergie_quali"),
-                "Ricoveri_diagnosi": patient.get("Ricoveri_diagnosi"),
-                "Cure_domiciliari_attive": patient.get("Cure_domiciliari_attive"),
-                "Misura_B1_attiva": patient.get("Misura_B1_attiva"),
-                "similarity": f"{result['similarity']:.2%}"
-            }
-            summaries.append(summary)
+        if len(results) > 1:
+            additional_patients = [r for r in results[1:] if r['similarity'] >= (top_similarity - 0.1)]
+            if additional_patients:
+                context += f"\n\n**Other Potentially Relevant Patients:**\n"
+                for result in additional_patients[:2]:
+                    patient_info = result['patient']
+                    context += f"\n- {patient_info.get('Nome')} {patient_info.get('Cognome')} "
+                    context += f"(similarity: {result['similarity']:.2%}, "
+                    context += f"from {patient_info.get('Residenza', 'Unknown')})"
 
-        context = f"\n\n**Top {len(summaries)} Relevant Patients:**\n```json\n{json.dumps(summaries, ensure_ascii=False, indent=2)}\n```"
         return context
 
     else:
@@ -154,9 +236,11 @@ def create_context_from_results(results: List[dict], query: str) -> str:
             summaries.append({
                 "Nome": patient.get("Nome"),
                 "Cognome": patient.get("Cognome"),
-                "Residenza": patient.get("Residenza")
+                "Residenza": patient.get("Residenza"),
+                "Data_nascita": patient.get("Data_nascita"),
+                "Ricoveri_diagnosi": patient.get("Ricoveri_diagnosi")
             })
 
         context = f"\n\n**Note:** Low relevance match (top similarity: {top_similarity:.2%}). "
-        context += f"Here are the closest patients, but they may not be highly relevant:\n```json\n{json.dumps(summaries, ensure_ascii=False, indent=2)}\n```"
+        context += f"The query may not match well. Here are the closest patients:\n```json\n{json.dumps(summaries, ensure_ascii=False, indent=2)}\n```"
         return context
