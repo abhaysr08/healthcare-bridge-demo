@@ -33,7 +33,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
-        # - VITE_API_URL=https://a8aab411171b.ngrok-free.app
+        # - VITE_API_URL=https://6c9921019269.ngrok-free.app
         - VITE_APP_NAME=${VITE_APP_NAME:-Healthcare Bridge}
         - VITE_APP_SUBTITLE=${VITE_APP_SUBTITLE:-Assistente Cure Domiciliari}
     container_name: healthcare-frontend

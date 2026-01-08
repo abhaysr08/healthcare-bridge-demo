@@ -66,6 +66,11 @@ function Chatbot() {
       const response = await axios.post(`${API_URL}/chat`, {
         message: userMessage,
         conversation_history: messages.slice(1)
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true'
+        }
       });
 
       setMessages(prev => [

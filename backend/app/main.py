@@ -28,6 +28,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 client = Mistral(api_key=MISTRAL_API_KEY)
