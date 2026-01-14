@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -13,9 +11,12 @@ services:
       - MODEL_NAME=${MODEL_NAME:-mistral-small-latest}
       - HOST=0.0.0.0
       - PORT=8000
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      - CORS_ORIGINS=*
+      - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
     volumes:
+      - ./backend/app:/app/app
       - ./backend/data:/app/data:ro
+      - chroma-data:/app/chroma_db
     env_file:
       - .env
     restart: unless-stopped
@@ -32,13 +33,15 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+        # - VITE_API_URL=https://6c9921019269.ngrok-free.app
         - VITE_APP_NAME=${VITE_APP_NAME:-Healthcare Bridge}
         - VITE_APP_SUBTITLE=${VITE_APP_SUBTITLE:-Assistente Cure Domiciliari}
     container_name: healthcare-frontend
     ports:
       - "${FRONTEND_PORT:-3000}:80"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     restart: unless-stopped
 
+volumes:
+  chroma-data:

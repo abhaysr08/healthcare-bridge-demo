@@ -1,17 +1,33 @@
-__pycache__
+# Build artifacts
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
 .Python
-env/
-venv/
-.venv
-.env
-*.log
-.git
-.gitignore
-README.md
-.pytest_cache
-.coverage
-htmlcov/
 
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+docs/
+
+# Local database
+chroma_db/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
