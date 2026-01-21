@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 env_path = Path(__file__).parent.parent.parent / ".env"
 load_dotenv(env_path)
 
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-MODEL_NAME = os.getenv("MODEL_NAME", "mistral-small-latest")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4-turbo")
 HOST = os.getenv("HOST", "0.0.0.0")
 PORT = int(os.getenv("PORT", "8000"))
 

@@ -1,6 +1,6 @@
 # Healthcare Bridge - Home Care Chatbot Demo
 
-A minimal demo chatbot for healthcare home-care patient management using FastAPI backend and React.js frontend with Mistral AI.
+A minimal demo chatbot for healthcare home-care patient management using FastAPI backend and React.js frontend with OpenAI GPT-4-Turbo.
 
 ## Features
 
@@ -18,7 +18,7 @@ healthcare-bridge-demo/
 ├── backend/
 │   ├── data/
 │   │   └── patients.json          # 50 synthetic patients
-│   ├── main.py                     # FastAPI server with Mistral AI
+│   ├── main.py                     # FastAPI server with OpenAI
 │   ├── requirements.txt
 │   ├── .env                        # API keys (not in git)
 │   ├── .gitignore
@@ -147,9 +147,9 @@ The system understands and can answer questions about all 48 patient fields:
 
 ## Technologies
 
-- **Backend**: FastAPI, Python 3.12, Mistral AI
+- **Backend**: FastAPI, Python 3.12, OpenAI
 - **Frontend**: React.js 18, Vite, Axios, ReactMarkdown
-- **AI**: Mistral Small (fast and conversational)
+- **AI**: GPT-4-Turbo (accurate and conversational)
 
 ## Key Features
 
@@ -168,8 +168,8 @@ For Docker Compose, create a single `.env` file in the root directory:
 
 ```bash
 # Backend Configuration
-MISTRAL_API_KEY=your-mistral-api-key-here
-MODEL_NAME=mistral-small-latest
+OPENAI_API_KEY=your-openai-api-key-here
+MODEL_NAME=gpt-4-turbo
 HOST=0.0.0.0
 BACKEND_PORT=8000
 CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
@@ -189,9 +189,9 @@ If running manually without Docker, you can use separate `.env` files:
 
 **Backend (`backend/.env`):**
 ```bash
-# Mistral AI Configuration
-MISTRAL_API_KEY=your-mistral-api-key-here
-MODEL_NAME=mistral-small-latest
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+MODEL_NAME=gpt-4-turbo
 
 # Server Configuration
 HOST=127.0.0.1
@@ -212,7 +212,7 @@ VITE_APP_SUBTITLE=Assistente Cure Domiciliari
 
 ### Backend Issues
 - **Port in use**: Check if port 8000 is free: `lsof -i :8000`
-- **API Key Error**: Check `.env` file has valid Mistral API key
+- **API Key Error**: Check `.env` file has valid OpenAI API key
 
 ### Frontend Issues
 - **Connection Error**: Make sure backend is running first

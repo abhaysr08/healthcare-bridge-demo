@@ -7,8 +7,8 @@ services:
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     environment:
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - MODEL_NAME=${MODEL_NAME:-mistral-small-latest}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MODEL_NAME=${MODEL_NAME:-gpt-4-turbo}
       - HOST=0.0.0.0
       - PORT=8000
       - CORS_ORIGINS=*
@@ -34,7 +34,7 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
         # - VITE_API_URL=https://6c9921019269.ngrok-free.app
-        - VITE_APP_NAME=${VITE_APP_NAME:-Healthcare Bridge}
+        - VITE_APP_NAME=${VITE_APP_NAME:-Healthbridge Care}
         - VITE_APP_SUBTITLE=${VITE_APP_SUBTITLE:-Assistente Cure Domiciliari}
     container_name: healthcare-frontend
     ports:

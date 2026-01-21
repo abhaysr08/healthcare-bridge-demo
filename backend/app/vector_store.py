@@ -3,14 +3,14 @@ import logging
 from typing import List
 from datetime import datetime
 import chromadb
-from mistralai import Mistral
+from openai import OpenAI
 from .utils import create_patient_summary
 
 logger = logging.getLogger(__name__)
 
 class VectorStoreManager:
-    def __init__(self, mistral_client: Mistral, persist_directory: str, patients_data: List[dict]):
-        self.mistral_client = mistral_client
+    def __init__(self, openai_client: OpenAI, persist_directory: str, patients_data: List[dict]):
+        self.openai_client = openai_client
         self.chroma_client = chromadb.PersistentClient(path=persist_directory)
         self.collection = None
         self.patients_data = patients_data
@@ -50,10 +50,10 @@ class VectorStoreManager:
                 })
                 ids.append(f"patient_{i}")
 
-            logger.info("Generating embeddings via Mistral API...")
-            embeddings_response = self.mistral_client.embeddings.create(
-                model="mistral-embed",
-                inputs=documents
+            logger.info("Generating embeddings via OpenAI API...")
+            embeddings_response = self.openai_client.embeddings.create(
+                model="text-embedding-3-small",
+                input=documents
             )
 
             embeddings = [item.embedding for item in embeddings_response.data]
@@ -76,9 +76,9 @@ class VectorStoreManager:
             raise ValueError("Collection not initialized. Call initialize_collection() first.")
 
         try:
-            query_embedding_response = self.mistral_client.embeddings.create(
-                model="mistral-embed",
-                inputs=[query]
+            query_embedding_response = self.openai_client.embeddings.create(
+                model="text-embedding-3-small",
+                input=[query]
             )
             query_embedding = query_embedding_response.data[0].embedding
 
