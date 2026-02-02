@@ -3,7 +3,7 @@ import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import './Chatbot.css';
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 const APP_NAME = import.meta.env.VITE_APP_NAME;
 const APP_SUBTITLE = import.meta.env.VITE_APP_SUBTITLE;
 const WELCOME_MESSAGE = `Benvenuto in ${APP_NAME}! Sono il tuo assistente AI per la gestione dei pazienti in assistenza domiciliare. Ho accesso a informazioni complete sui pazienti e posso aiutarti con storie cliniche, trattamenti attuali, piani di cura e dettagli amministrativi. Sentiti libero di chiedere informazioni su qualsiasi paziente o di cercare nel nostro database completo.`;
@@ -27,6 +27,16 @@ function Chatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Refocus textarea when loading completes
+  useEffect(() => {
+    if (!isLoading && textareaRef.current) {
+      // Use setTimeout to ensure focus happens after DOM updates
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 0);
+    }
+  }, [isLoading]);
 
   const adjustTextareaHeight = () => {
     const textarea = textareaRef.current;

@@ -4,15 +4,28 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: healthcare-backend
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+    network_mode: "host"
+    extra_hosts:
+      - "clumiddle.aodv.local:10.30.208.208"
+      - "bof.asst-brianza.it:10.30.208.208"
     environment:
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
-      - MODEL_NAME=${MODEL_NAME:-mistral-small-latest}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MODEL_NAME=${MODEL_NAME:-gpt-4-turbo}
       - HOST=0.0.0.0
       - PORT=8000
       - CORS_ORIGINS=*
       - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
+      - REGISTRY_API_URL=${REGISTRY_API_URL:-https://clumiddle.aodv.local/AC/pac/rest/paziente}
+      - REGISTRY_API_ENABLED=${REGISTRY_API_ENABLED:-true}
+      - REGISTRY_API_TIMEOUT=${REGISTRY_API_TIMEOUT:-30}
+      - REGISTRY_API_MOCK=${REGISTRY_API_MOCK:-false}
+      - AURORA_DATA_PATH=${AURORA_DATA_PATH:-data/real-patient.json}
+      - BOF_API_ENABLED=${BOF_API_ENABLED:-true}
+      - BOF_API_TOKEN=${BOF_API_TOKEN}
+      - BOF_API_TIMEOUT=${BOF_API_TIMEOUT:-10}
+      - ANONYMIZED_TELEMETRY=false
+      - POSTHOG_DISABLED=true
+      - LANGCHAIN_TRACING_V2=false
     volumes:
       - ./backend/app:/app/app
       - ./backend/data:/app/data:ro
@@ -34,7 +47,7 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
         # - VITE_API_URL=https://6c9921019269.ngrok-free.app
-        - VITE_APP_NAME=${VITE_APP_NAME:-Healthcare Bridge}
+        - VITE_APP_NAME=${VITE_APP_NAME:-Healthbridge Care}
         - VITE_APP_SUBTITLE=${VITE_APP_SUBTITLE:-Assistente Cure Domiciliari}
     container_name: healthcare-frontend
     ports:
