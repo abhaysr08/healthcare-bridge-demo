@@ -4,8 +4,10 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: healthcare-backend
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+    network_mode: "host"
+    extra_hosts:
+      - "clumiddle.aodv.local:10.30.208.208"
+      - "bof.asst-brianza.it:10.30.208.208"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MODEL_NAME=${MODEL_NAME:-gpt-4-turbo}
@@ -13,6 +15,17 @@ services:
       - PORT=8000
       - CORS_ORIGINS=*
       - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
+      - REGISTRY_API_URL=${REGISTRY_API_URL:-https://clumiddle.aodv.local/AC/pac/rest/paziente}
+      - REGISTRY_API_ENABLED=${REGISTRY_API_ENABLED:-true}
+      - REGISTRY_API_TIMEOUT=${REGISTRY_API_TIMEOUT:-30}
+      - REGISTRY_API_MOCK=${REGISTRY_API_MOCK:-false}
+      - AURORA_DATA_PATH=${AURORA_DATA_PATH:-data/real-patient.json}
+      - BOF_API_ENABLED=${BOF_API_ENABLED:-true}
+      - BOF_API_TOKEN=${BOF_API_TOKEN}
+      - BOF_API_TIMEOUT=${BOF_API_TIMEOUT:-10}
+      - ANONYMIZED_TELEMETRY=false
+      - POSTHOG_DISABLED=true
+      - LANGCHAIN_TRACING_V2=false
     volumes:
       - ./backend/app:/app/app
       - ./backend/data:/app/data:ro

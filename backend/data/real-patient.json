@@ -1,0 +1,362 @@
+{
+  "results" : [
+    {
+      "columns" : [
+        {
+          "name" : "ID_ANAG",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "COGNOME",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "NOME",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "CF",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "SESSO",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "DATA_NASCITA",
+          "type" : "DATE"
+        },
+        {
+          "name" : "TIPO_ACCESSO",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "NUMERO_EPISODIO",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "DATA_ACCETTAZIONE",
+          "type" : "DATE"
+        },
+        {
+          "name" : "DATA_DIMISSIONE",
+          "type" : "DATE"
+        },
+        {
+          "name" : "STRUTTURA",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "PRESIDIO",
+          "type" : "VARCHAR2"
+        },
+        {
+          "name" : "DIAGNOSI_ACC",
+          "type" : "VARCHAR2"
+        }
+      ],
+      "items" : [
+        {
+          "id_anag" : "CC12031385",
+          "cognome" : "BRAMBILLA",
+          "nome" : "IVANO",
+          "cf" : "BRMVNI67C25F205T",
+          "sesso" : "M",
+          "data_nascita" : "25-MAR-67",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057085",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980258037",
+          "cognome" : "MISURACA",
+          "nome" : "ARNO",
+          "cf" : "MSRRNA51A11M140K",
+          "sesso" : "M",
+          "data_nascita" : "11-JAN-51",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057086",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980199467",
+          "cognome" : "BRAMBILLA",
+          "nome" : "SANDRA",
+          "cf" : "BRMSDR55B51C952D",
+          "sesso" : "F",
+          "data_nascita" : "11-FEB-55",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057087",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "CC06046134",
+          "cognome" : "IERVOLINO",
+          "nome" : "ANGELO",
+          "cf" : "RVLNGL68L06F839G",
+          "sesso" : "M",
+          "data_nascita" : "06-JUL-68",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057088",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "CC17026682",
+          "cognome" : "MINARDI",
+          "nome" : "MARIA",
+          "cf" : "MNRMRA51R52H490N",
+          "sesso" : "F",
+          "data_nascita" : "12-OCT-51",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057089",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980268295",
+          "cognome" : "PELLICCIOLI",
+          "nome" : "ANGELO",
+          "cf" : "PLLNGL68M24F704K",
+          "sesso" : "M",
+          "data_nascita" : "24-AUG-68",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057090",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CP BELLUSCO",
+          "presidio" : "Bellusco",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980221448",
+          "cognome" : "COSENTINO",
+          "nome" : "ROBERTO",
+          "cf" : "CSNRRT57P18B758Q",
+          "sesso" : "M",
+          "data_nascita" : "18-SEP-57",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057091",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980293049",
+          "cognome" : "STEFFANI",
+          "nome" : "GIACOMO GIOVANNI",
+          "cf" : "STFGMG54P17B289R",
+          "sesso" : "M",
+          "data_nascita" : "17-SEP-54",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057092",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980261240",
+          "cognome" : "MOZZI",
+          "nome" : "CARLO",
+          "cf" : "MZZCRL46T24F205U",
+          "sesso" : "M",
+          "data_nascita" : "24-DEC-46",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057093",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980312331",
+          "cognome" : "CAVENAGHI",
+          "nome" : "MARTA",
+          "cf" : "CVNMRT81R64M052V",
+          "sesso" : "F",
+          "data_nascita" : "24-OCT-81",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057094",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980351513",
+          "cognome" : "GASTI",
+          "nome" : "SILVIA",
+          "cf" : "GSTSLV93E60L667X",
+          "sesso" : "F",
+          "data_nascita" : "20-MAY-93",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057095",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "CC00017380",
+          "cognome" : "GALATI",
+          "nome" : "ANNA",
+          "cf" : "GLTNNA53B52A177T",
+          "sesso" : "F",
+          "data_nascita" : "12-FEB-53",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057096",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "CC11004498",
+          "cognome" : "NDOYE",
+          "nome" : "TACKO",
+          "cf" : "NDYTCK11B42M052K",
+          "sesso" : "F",
+          "data_nascita" : "02-FEB-11",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057097",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980202707",
+          "cognome" : "BROGNA",
+          "nome" : "ALESSANDRO",
+          "cf" : "BRGLSN78H10F704N",
+          "sesso" : "M",
+          "data_nascita" : "10-JUN-78",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057098",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980270070",
+          "cognome" : "PEREGO",
+          "nome" : "MAURO",
+          "cf" : "PRGMRA72P24F704P",
+          "sesso" : "M",
+          "data_nascita" : "24-SEP-72",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057099",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "CC17047429",
+          "cognome" : "CASATI",
+          "nome" : "VALENTINA ANNA",
+          "cf" : "CSTVNT09D52F704Z",
+          "sesso" : "F",
+          "data_nascita" : "12-APR-09",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057100",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980233651",
+          "cognome" : "FUMAGALLI",
+          "nome" : "FLORA",
+          "cf" : "FMGFLR57B45B798T",
+          "sesso" : "F",
+          "data_nascita" : "05-FEB-57",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057101",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980284327",
+          "cognome" : "RUSSO",
+          "nome" : "FRANCESCA",
+          "cf" : "RSSFNC65S70G273A",
+          "sesso" : "F",
+          "data_nascita" : "30-NOV-65",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057102",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "980188156",
+          "cognome" : "BARLASSINA",
+          "nome" : "DONATA MARIA",
+          "cf" : "BRLDTM65T48F704I",
+          "sesso" : "F",
+          "data_nascita" : "08-DEC-65",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057103",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        },
+        {
+          "id_anag" : "CC00017380",
+          "cognome" : "GALATI",
+          "nome" : "ANNA",
+          "cf" : "GLTNNA53B52A177T",
+          "sesso" : "F",
+          "data_nascita" : "12-FEB-53",
+          "tipo_accesso" : "ESTERNI",
+          "numero_episodio" : "EA2300057104",
+          "data_accettazione" : "24-JAN-23",
+          "data_dimissione" : "",
+          "struttura" : "CUP VIMERCATE",
+          "presidio" : "P.O. di Vimercate",
+          "diagnosi_acc" : ""
+        }
+      ]
+    }
+  ]
+}

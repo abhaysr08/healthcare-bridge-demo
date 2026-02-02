@@ -1,26 +1,38 @@
 import json
 import logging
-import uvicorn
-from pathlib import Path
+import re
+from typing import Optional
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
-from .config import HOST, PORT
 
 from .config import (
     OPENAI_API_KEY,
     MODEL_NAME,
     CORS_ORIGINS,
-    CHROMA_PERSIST_DIRECTORY
+    CHROMA_PERSIST_DIRECTORY,
+    AURORA_DATA_PATH,
+    REGISTRY_API_URL,
+    REGISTRY_API_TIMEOUT,
+    REGISTRY_API_ENABLED,
+    REGISTRY_API_MOCK,
+    BOF_API_URL,
+    BOF_API_TOKEN,
+    BOF_API_TIMEOUT,
+    BOF_API_ENABLED,
+    get_config_summary
 )
 from .models import ChatRequest, ChatResponse
-from .vector_store import VectorStoreManager, create_context_from_results
+from .vector_store import VectorStoreManager, create_rag_context
 from .utils import get_system_prompt
+from .services.registry_client import RegistryClient
+from .services.bof_client import BOFClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Healthcare Home-Care Chatbot API")
+app = FastAPI(title="Healthbridge Care API", version="3.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,228 +45,347 @@ app.add_middleware(
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-DATA_PATH = Path(__file__).parent.parent / "data" / "patients.json"
-with open(DATA_PATH, "r", encoding="utf-8") as f:
-    PATIENTS_DATA = json.load(f)
+# RAG-based vector store as primary data source
+vector_store: Optional[VectorStoreManager] = None
 
-vector_store = None
+# External API clients for enrichment
+registry_client: Optional[RegistryClient] = None
+bof_client: Optional[BOFClient] = None
+
 
 @app.on_event("startup")
 async def startup_event():
-    global vector_store
+    global vector_store, registry_client, bof_client
+
+    logger.info("Starting Healthbridge Care API v3.0 (RAG-based)")
+    logger.info(f"Configuration: {json.dumps(get_config_summary(), indent=2)}")
 
     try:
-        logger.info("Initializing vector store...")
+        # Initialize external API clients
+        registry_client = RegistryClient(
+            base_url=REGISTRY_API_URL,
+            timeout=REGISTRY_API_TIMEOUT,
+            enabled=REGISTRY_API_ENABLED,
+            mock=REGISTRY_API_MOCK
+        )
 
-        vector_store = VectorStoreManager(client, CHROMA_PERSIST_DIRECTORY, PATIENTS_DATA)
+        bof_client = BOFClient(
+            base_url=BOF_API_URL,
+            token=BOF_API_TOKEN,
+            timeout=BOF_API_TIMEOUT,
+            enabled=BOF_API_ENABLED
+        )
+
+        # Initialize RAG vector store with Aurora data
+        logger.info(f"Initializing RAG vector store from: {AURORA_DATA_PATH}")
+        vector_store = VectorStoreManager(
+            openai_client=client,
+            persist_directory=CHROMA_PERSIST_DIRECTORY,
+            aurora_data_path=AURORA_DATA_PATH
+        )
         vector_store.initialize_collection()
 
-        if vector_store.collection.count() == 0:
-            logger.info(f"Collection empty. Vectorizing {len(PATIENTS_DATA)} patients...")
-            vector_store.add_patients(PATIENTS_DATA)
-            logger.info("Vectorization complete!")
-        else:
-            logger.info(f"Loaded existing vectors for {vector_store.collection.count()} patients")
+        # Check if we need to rebuild the vector store
+        current_count = vector_store.get_patient_count()
+        expected_count = len(vector_store._patients)
 
-        logger.info("Vector store initialization complete")
+        # Force rebuild to ensure new RAG structure is used
+        needs_rebuild = current_count == 0 or current_count != expected_count
+
+        # Also check if the vector store has the new structure (patient_json field)
+        if not needs_rebuild and current_count > 0:
+            try:
+                sample = vector_store.collection.get(limit=1, include=["metadatas"])
+                if sample['metadatas'] and 'patient_json' not in sample['metadatas'][0]:
+                    logger.info("Vector store has old structure, forcing rebuild...")
+                    needs_rebuild = True
+            except Exception:
+                needs_rebuild = True
+
+        if needs_rebuild:
+            logger.info(f"Building vector store: {expected_count} patients to index...")
+            try:
+                vector_store.clear_collection()
+                indexed = vector_store.build_vector_store()
+                logger.info(f"Vector store built with {indexed} patients")
+            except Exception as embed_err:
+                logger.warning(f"Failed to build embeddings: {embed_err}")
+                logger.warning("RAG search will use in-memory fallback")
+        else:
+            logger.info(f"Vector store already contains {current_count} patients with correct structure")
+
+        logger.info(f"Healthbridge Care API started - {vector_store.get_patient_count()} patients indexed")
 
     except Exception as e:
-        logger.error(f"Failed to initialize vector store: {e}")
-        logger.warning("Application will continue but vector search may not work correctly")
+        logger.error(f"Failed to initialize services: {e}")
+
 
 @app.get("/")
 async def root():
-    return {
-        "status": "healthy",
-        "message": "Healthcare Home-Care Chatbot API",
-        "patients_loaded": len(PATIENTS_DATA)
-    }
+    status = {"status": "healthy", "service": "Healthbridge Care API", "version": "3.0.0", "architecture": "RAG"}
+    if vector_store:
+        status["patients_indexed"] = vector_store.get_patient_count()
+    return status
+
 
 @app.get("/patients")
 async def get_patients():
-    return [
-        {
-            "id": i,
-            "nome": p.get("Nome"),
-            "cognome": p.get("Cognome"),
-            "codice_fiscale": p.get("Codice_fiscale"),
-            "data_nascita": p.get("Data_nascita")
-        }
-        for i, p in enumerate(PATIENTS_DATA)
-    ]
+    if not vector_store:
+        raise HTTPException(status_code=503, detail="Vector store not initialized")
+    return vector_store.get_all_patients()
 
-@app.get("/patients/{patient_id}")
-async def get_patient(patient_id: int):
-    if patient_id < 0 or patient_id >= len(PATIENTS_DATA):
+
+@app.get("/patients/{fiscal_code}")
+async def get_patient(fiscal_code: str):
+    if not vector_store:
+        raise HTTPException(status_code=503, detail="Vector store not initialized")
+
+    patient_data = vector_store.get_patient_by_fiscal_code(fiscal_code)
+    if not patient_data:
         raise HTTPException(status_code=404, detail="Patient not found")
-    return PATIENTS_DATA[patient_id]
 
-def find_patient_by_name(name: str) -> dict:
-    """
-    Find patient by exact name match (case-insensitive).
-    Returns patient dict if found, None otherwise.
-    """
-    name_lower = name.lower().strip()
-    for patient in PATIENTS_DATA:
-        full_name = f"{patient.get('Nome', '')} {patient.get('Cognome', '')}".lower().strip()
-        if full_name == name_lower:
-            logger.info(f"Found exact match for patient: {name}")
-            return patient
-    logger.warning(f"No patient found with name: {name}")
-    return None
+    # Enrich with external APIs if available
+    enriched = await enrich_patient_data(fiscal_code, patient_data)
+    return enriched
 
-def validate_fiscal_code(patient: dict, fiscal_code: str) -> bool:
-    """
-    Validate that the fiscal code matches the patient.
-    Returns True if match, False otherwise.
-    """
-    patient_fc = patient.get('Codice_fiscale', '').strip().upper()
-    provided_fc = fiscal_code.strip().upper()
-    
-    if patient_fc == provided_fc:
-        logger.info(f"Fiscal code validated for patient: {patient.get('Nome')} {patient.get('Cognome')}")
-        return True
-    else:
-        logger.warning(f"Fiscal code mismatch for patient {patient.get('Nome')} {patient.get('Cognome')}: expected {patient_fc}, got {provided_fc}")
-        return False
 
-def detect_language(text: str) -> str:
-    """
-    Detect if the text is in Italian or English.
-    Returns 'it' for Italian, 'en' for English.
-    Uses strict detection - only Italian if Italian keywords found, otherwise English.
-    """
-    text_lower = text.lower()
-    
-    italian_keywords = [
-        'dimmi', 'dammi', 'mostra', 'mostrami', 'puoi', 'potresti',
-        'per favore', 'grazie', 'ciao', 'buongiorno', 'buonasera',
-        'paziente', 'pazienti', 'informazioni', 'riepilogo', 'panoramica',
-        'visitare', 'andare', 'sto', 'sono', 'vorrei', 'mi', 'di più'
-    ]
-    
-    if any(keyword in text_lower for keyword in italian_keywords):
-        return 'it'
-    
-    return 'en'
+async def enrich_patient_data(fiscal_code: str, patient_data: dict) -> dict:
+    """Enrich patient data from vector store with external API data."""
+    enriched = {
+        **patient_data['patient'],
+        'clinical_events': patient_data['events'],
+        'sources': ['rag_vector_store']
+    }
 
+    # Enrich with Registry API
+    if registry_client:
+        registry_patient = await registry_client.get_patient(fiscal_code)
+        if registry_patient:
+            enriched['validated'] = True
+            enriched['sources'].append('registry')
+            if registry_patient.luogo_nascita:
+                enriched['luogo_nascita'] = {
+                    'comune': registry_patient.luogo_nascita.descrizione_comune,
+                    'codice_istat': registry_patient.luogo_nascita.codice_istat_comune
+                }
+            if registry_patient.residenza:
+                enriched['residenza'] = {
+                    'comune': registry_patient.residenza.descrizione_comune,
+                    'indirizzo': registry_patient.residenza.indirizzo
+                }
+
+    # Enrich with BOF API
+    if bof_client:
+        protected_discharges = await bof_client.get_protected_discharges(fiscal_code)
+        if protected_discharges:
+            enriched['protected_discharges'] = [pd.data for pd in protected_discharges if pd.data]
+            enriched['sources'].append('bof')
+
+    return enriched
 
 
 def is_fiscal_code(text: str) -> bool:
-    """
-    Check if text looks like an Italian fiscal code.
-    Italian fiscal codes are 16 alphanumeric characters.
-    """
     text = text.strip().upper()
-    if len(text) != 16:
+    return len(text) == 16 and bool(re.match(r'^[A-Z0-9]{16}$', text))
+
+
+def extract_fiscal_code(text: str) -> Optional[str]:
+    match = re.search(r'\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b', text.upper())
+    if match:
+        return match.group(1)
+    return None
+
+
+def detect_language(text: str) -> str:
+    italian_keywords = [
+        'dimmi', 'dammi', 'mostra', 'mostrami', 'puoi', 'potresti',
+        'per favore', 'grazie', 'ciao', 'buongiorno', 'buonasera',
+        'paziente', 'pazienti', 'informazioni'
+    ]
+    if any(kw in text.lower() for kw in italian_keywords):
+        return 'it'
+    return 'en'
+
+
+def is_general_query(text: str) -> bool:
+    """Detect if the query is about the system, services, or general information."""
+    text_lower = text.lower()
+
+    general_keywords = [
+        'your service', 'your services', 'you provide', 'you offering', 'what do you do',
+        'what can you', 'how can you help', 'help me', 'assist me',
+        'i tuoi servizi', 'cosa fai', 'come puoi aiutarmi',
+        'what services', 'quali servizi', 'your capabilities', 'le tue capacità',
+        'hello', 'hi', 'ciao', 'buongiorno', 'buonasera'
+    ]
+
+    return any(kw in text_lower for kw in general_keywords)
+
+
+def is_patient_query(text: str) -> bool:
+    """Detect if the query is about patients (requires RAG search)."""
+    text_lower = text.lower()
+
+    if is_general_query(text_lower):
         return False
-    
-    import re
-    # Allow alphanumeric characters (letters and digits)
-    pattern = r'^[A-Z0-9]{16}$'
-    return bool(re.match(pattern, text))
+
+    patient_keywords = [
+        'patient', 'paziente', 'pazienti', 'patients',
+        'tell me about', 'show me', 'mostrami', 'dimmi',
+        'fiscal code', 'codice fiscale',
+        'clinical', 'clinico', 'diagnosis', 'diagnosi',
+        'hospital', 'ospedale', 'visit', 'visita',
+        'how many', 'quanti', 'list', 'lista', 'all', 'tutti'
+    ]
+
+    return any(kw in text_lower for kw in patient_keywords)
+
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
+    """
+    RAG-based chat endpoint.
+
+    Flow:
+    1. Extract fiscal code if present -> exact lookup from vector store
+    2. If no fiscal code but patient query -> semantic RAG search
+    3. General queries -> respond without patient data
+    4. Enrich with external APIs when available
+    """
     try:
-        if vector_store is None:
-            raise HTTPException(
-                status_code=503,
-                detail="Vector store not initialized. Please wait or restart the server."
-            )
+        if not vector_store:
+            raise HTTPException(status_code=503, detail="Vector store not initialized")
 
         logger.info(f"Received query: {request.message}")
-        
+        lang = detect_language(request.message)
+        lang_instruction = "\n\n**IMPORTANT: Respond in ENGLISH.**" if lang == 'en' else "\n\n**IMPORTANTE: Rispondi in ITALIANO.**"
+
+        # Extract fiscal code from message (if present)
+        fiscal_code = None
         if is_fiscal_code(request.message):
-            logger.info(f"Fiscal code detected: {request.message}")
-            
-            patient_by_fc = None
-            for p in PATIENTS_DATA:
-                if p.get('Codice_fiscale', '').strip().upper() == request.message.strip().upper():
-                    patient_by_fc = p
-                    break
-            
-            if patient_by_fc:
-                logger.info(f"Fiscal code validated: {patient_by_fc.get('Nome')} {patient_by_fc.get('Cognome')}")
-                
-                context = f"\n\n**Patient Data:**\n```json\n{json.dumps(patient_by_fc, ensure_ascii=False, indent=2)}\n```"
-                system_prompt = get_system_prompt(len(PATIENTS_DATA))
-                
-                messages = [
-                    {"role": "system", "content": system_prompt + context}
-                ]
-                
+            fiscal_code = request.message.strip().upper()
+        else:
+            fiscal_code = extract_fiscal_code(request.message)
+
+        # CASE 1: Fiscal code provided - exact lookup from vector store
+        if fiscal_code:
+            logger.info(f"Fiscal code detected: {fiscal_code} - performing exact RAG lookup")
+
+            patient_data = vector_store.get_patient_by_fiscal_code(fiscal_code)
+
+            if patient_data:
+                # Enrich with external APIs
+                enriched = await enrich_patient_data(fiscal_code, patient_data)
+
+                context = f"\n\n**Patient Data (from RAG vector store):**\n```json\n{json.dumps(enriched, ensure_ascii=False, indent=2)}\n```"
+
+                messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
                 for msg in request.conversation_history:
                     messages.append({"role": msg.role, "content": msg.content})
-                
                 messages.append({"role": "user", "content": request.message})
-                
+
                 response = client.chat.completions.create(
-                    model=MODEL_NAME,
-                    messages=messages,
-                    temperature=0.7,
-                    max_tokens=1500
+                    model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=1000
                 )
-                
-                return ChatResponse(
-                    response=response.choices[0].message.content,
-                    patient_context=patient_by_fc
-                )
+
+                return ChatResponse(response=response.choices[0].message.content, patient_context=enriched)
             else:
-                logger.warning(f"Fiscal code not found: {request.message}")
-                
-                lang = 'en'
-                if request.conversation_history:
-                    last_user_msg = None
-                    for msg in reversed(request.conversation_history):
-                        if msg.role == "user":
-                            last_user_msg = msg.content
-                            break
-                    if last_user_msg:
-                        lang = detect_language(last_user_msg)
-                
-                if lang == 'it':
-                    error_message = "Paziente non trovato, per favore verifica il codice fiscale / scegli tra i pazienti disponibili."
-                else:
-                    error_message = "Patient not found, please verify the fiscal code or choose from available patients."
-                
-                return ChatResponse(
-                    response=error_message,
-                    patient_context=None
+                logger.warning(f"Fiscal code {fiscal_code} not found in vector store")
+                error_msg = "Paziente non trovato nel database. Verifica il codice fiscale e riprova." if lang == 'it' else "Patient not found in the database. Please verify the fiscal code and try again."
+                return ChatResponse(response=error_msg, patient_context=None)
+
+        # CASE 2: Patient query without fiscal code - semantic RAG search
+        if is_patient_query(request.message):
+            logger.info("Patient query detected - performing semantic RAG search")
+
+            # Perform semantic search
+            search_results = vector_store.search_patients(request.message, top_k=10)
+
+            if search_results:
+                # Create RAG context from search results
+                context = create_rag_context(search_results, request.message)
+
+                # Get top result for patient_context response
+                top_result = search_results[0] if search_results[0]['similarity'] >= 0.4 else None
+                patient_context = None
+                if top_result:
+                    patient_context = {
+                        **top_result['patient'],
+                        'clinical_events': top_result['events'],
+                        'similarity': top_result['similarity']
+                    }
+
+                messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
+                for msg in request.conversation_history:
+                    messages.append({"role": msg.role, "content": msg.content})
+                messages.append({"role": "user", "content": request.message})
+
+                response = client.chat.completions.create(
+                    model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=1000
                 )
-        
-        search_results = vector_store.search_patients(query=request.message, top_k=10)
-        context = create_context_from_results(search_results, request.message, all_patients_data=PATIENTS_DATA)
-        system_prompt = get_system_prompt(len(PATIENTS_DATA))
 
-        messages = [
-            {"role": "system", "content": system_prompt + context}
-        ]
+                return ChatResponse(response=response.choices[0].message.content, patient_context=patient_context)
+            else:
+                # No results found
+                no_results_msg = "Non ho trovato pazienti corrispondenti. Prova con un codice fiscale specifico." if lang == 'it' else "No matching patients found. Please try with a specific fiscal code."
+                return ChatResponse(response=no_results_msg, patient_context=None)
 
+        # CASE 3: General query - respond without patient data
+        logger.info("General query detected - responding without patient data")
+
+        messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction}]
         for msg in request.conversation_history:
             messages.append({"role": msg.role, "content": msg.content})
-
         messages.append({"role": "user", "content": request.message})
 
         response = client.chat.completions.create(
-            model=MODEL_NAME,
-            messages=messages,
-            temperature=0.7,
-            max_tokens=1500
+            model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=500
         )
 
-        assistant_message = response.choices[0].message.content
+        return ChatResponse(response=response.choices[0].message.content, patient_context=None)
 
-        patient_context = None
-        if search_results and search_results[0]['similarity'] >= 0.7:
-            patient_context = search_results[0]['patient']
-
-        return ChatResponse(
-            response=assistant_message,
-            patient_context=patient_context
-        )
-
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error in chat endpoint: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing chat: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/search")
+async def search_patients(query: str, top_k: int = 5):
+    """
+    RAG semantic search endpoint for patients.
+    """
+    if not vector_store:
+        raise HTTPException(status_code=503, detail="Vector store not initialized")
+
+    results = vector_store.search_patients(query, top_k=top_k)
+
+    return {
+        "query": query,
+        "results": [
+            {
+                "codice_fiscale": r['codice_fiscale'],
+                "nome": r['patient'].get('nome', ''),
+                "cognome": r['patient'].get('cognome', ''),
+                "similarity": r['similarity'],
+                "event_count": len(r['events'])
+            }
+            for r in results
+        ]
+    }
+
+
+@app.get("/status")
+async def get_status():
+    status = {"api": "healthy", "version": "3.0.0", "architecture": "RAG"}
+    if vector_store:
+        status["vector_store"] = {
+            "initialized": True,
+            "patient_count": vector_store.get_patient_count()
+        }
+    if registry_client:
+        status["registry_api"] = {"available": registry_client.is_available()}
+    if bof_client:
+        status["bof_api"] = {"available": bof_client.is_available()}
+    return status
