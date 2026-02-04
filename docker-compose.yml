@@ -18,7 +18,6 @@ services:
       - REGISTRY_API_URL=${REGISTRY_API_URL:-https://clumiddle.aodv.local/AC/pac/rest/paziente}
       - REGISTRY_API_ENABLED=${REGISTRY_API_ENABLED:-true}
       - REGISTRY_API_TIMEOUT=${REGISTRY_API_TIMEOUT:-30}
-      - REGISTRY_API_MOCK=${REGISTRY_API_MOCK:-false}
       - AURORA_DATA_PATH=${AURORA_DATA_PATH:-data/real-patient.json}
       - BOF_API_ENABLED=${BOF_API_ENABLED:-true}
       - BOF_API_URL=${BOF_API_URL:-https://bof.asst-brianza.it/api/v1/index.php}
