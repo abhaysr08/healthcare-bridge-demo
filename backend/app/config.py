@@ -27,11 +27,10 @@ if not os.path.exists(aurora_data_path):
     aurora_data_path = str(Path(__file__).parent.parent / "data" / "real-patient.json")
 AURORA_DATA_PATH = aurora_data_path
 
-# Registry API configuration with proper defaults
+# Registry API configuration - fully dynamic, no mock data
 REGISTRY_API_URL = os.getenv("REGISTRY_API_URL", "https://clumiddle.aodv.local/AC/pac/rest/paziente")
 REGISTRY_API_TIMEOUT = int(os.getenv("REGISTRY_API_TIMEOUT", "30"))
 REGISTRY_API_ENABLED = os.getenv("REGISTRY_API_ENABLED", "true").lower() == "true"
-REGISTRY_API_MOCK = os.getenv("REGISTRY_API_MOCK", "false").lower() == "true"
 
 # BOF API configuration with proper defaults
 BOF_API_URL = os.getenv("BOF_API_URL", "https://bof.asst-brianza.it/api/v1/index.php")
@@ -47,7 +46,6 @@ def get_config_summary() -> dict:
         "registry_api": {
             "url": REGISTRY_API_URL,
             "enabled": REGISTRY_API_ENABLED,
-            "mock": REGISTRY_API_MOCK,
             "timeout": REGISTRY_API_TIMEOUT
         },
         "bof_api": {

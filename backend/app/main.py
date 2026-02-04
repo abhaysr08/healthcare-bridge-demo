@@ -302,18 +302,32 @@ async def chat(request: ChatRequest):
             search_results = vector_store.search_patients(request.message, top_k=10)
 
             if search_results:
-                # Create RAG context from search results
-                context = create_rag_context(search_results, request.message)
-
-                # Get top result for patient_context response
+                # Get top result and enrich with external APIs
                 top_result = search_results[0] if search_results[0]['similarity'] >= 0.4 else None
                 patient_context = None
+                context = ""
+
                 if top_result:
+                    # Found a good match - enrich with external APIs
+                    found_fiscal_code = top_result['codice_fiscale']
+                    logger.info(f"Found patient {found_fiscal_code} via semantic search (similarity: {top_result['similarity']:.2%})")
+
+                    # Enrich with Registry and BOF APIs
+                    patient_data = {
+                        'patient': top_result['patient'],
+                        'events': top_result['events']
+                    }
+                    enriched = await enrich_patient_data(found_fiscal_code, patient_data)
+
                     patient_context = {
-                        **top_result['patient'],
-                        'clinical_events': top_result['events'],
+                        **enriched,
                         'similarity': top_result['similarity']
                     }
+
+                    context = f"\n\n**Patient Data (from RAG + external APIs):**\n```json\n{json.dumps(enriched, ensure_ascii=False, indent=2)}\n```"
+                else:
+                    # Low confidence - show multiple options
+                    context = create_rag_context(search_results, request.message)
 
                 messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
                 for msg in request.conversation_history:
