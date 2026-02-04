@@ -10,22 +10,23 @@ logger = logging.getLogger(__name__)
 class BOFClient:
     """BOF API Client for protected discharges (dimissioni protette)."""
 
-    def __init__(self, base_url: Optional[str] = None,
-                 token: Optional[str] = None, timeout: int = 10, enabled: bool = False):
-        self.base_url = base_url or "https://bof.asst-brianza.it/api/v1/index.php"
+    def __init__(self, base_url: str, token: Optional[str] = None,
+                 timeout: int = 10, enabled: bool = True):
+        self.base_url = base_url if base_url else "https://bof.asst-brianza.it/api/v1/index.php"
         self.token = token
         self.timeout = timeout
-        self.enabled = enabled and token is not None and base_url is not None
+        # Only enable if we have both URL and token
+        self.enabled = enabled and token is not None
         self._api_available: Optional[bool] = None
 
-        if self.enabled:
-            logger.info(f"BOFClient: enabled with token, timeout={timeout}s")
-        else:
-            logger.info(f"BOFClient: disabled (enabled={enabled}, has_token={token is not None}, has_url={base_url is not None})")
+        logger.info(f"BOFClient initialized: enabled={self.enabled}, has_token={token is not None}, timeout={timeout}s, url={self.base_url}")
 
     async def get_protected_discharges(self, fiscal_code: str) -> List[ProtectedDischarge]:
         if not self.enabled:
+            logger.debug(f"BOF API disabled, skipping request for {fiscal_code}")
             return []
+
+        logger.info(f"BOF API calling: {self.base_url} for {fiscal_code}")
 
         try:
             async with httpx.AsyncClient(timeout=self.timeout, verify=False) as client:
@@ -55,9 +56,20 @@ class BOFClient:
 
                     logger.info(f"BOF: No protected discharge data for {fiscal_code}")
                     return []
-                return []
+                else:
+                    logger.warning(f"BOF API returned status {response.status_code}")
+                    return []
+
+        except httpx.TimeoutException:
+            logger.warning(f"BOF API timeout for {fiscal_code}")
+            self._api_available = False
+            return []
+        except httpx.ConnectError as e:
+            logger.warning(f"BOF API connection error: {e}")
+            self._api_available = False
+            return []
         except Exception as e:
-            logger.error(f"BOF API error: {e}")
+            logger.error(f"BOF API error ({type(e).__name__}): {e}")
             self._api_available = False
             return []
 
