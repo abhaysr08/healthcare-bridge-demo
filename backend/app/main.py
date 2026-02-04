@@ -16,7 +16,6 @@ from .config import (
     REGISTRY_API_URL,
     REGISTRY_API_TIMEOUT,
     REGISTRY_API_ENABLED,
-    REGISTRY_API_MOCK,
     BOF_API_URL,
     BOF_API_TOKEN,
     BOF_API_TIMEOUT,
@@ -65,8 +64,7 @@ async def startup_event():
         registry_client = RegistryClient(
             base_url=REGISTRY_API_URL,
             timeout=REGISTRY_API_TIMEOUT,
-            enabled=REGISTRY_API_ENABLED,
-            mock=REGISTRY_API_MOCK
+            enabled=REGISTRY_API_ENABLED
         )
 
         bof_client = BOFClient(

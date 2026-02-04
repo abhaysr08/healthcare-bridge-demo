@@ -21,6 +21,7 @@ services:
       - REGISTRY_API_MOCK=${REGISTRY_API_MOCK:-false}
       - AURORA_DATA_PATH=${AURORA_DATA_PATH:-data/real-patient.json}
       - BOF_API_ENABLED=${BOF_API_ENABLED:-true}
+      - BOF_API_URL=${BOF_API_URL:-https://bof.asst-brianza.it/api/v1/index.php}
       - BOF_API_TOKEN=${BOF_API_TOKEN}
       - BOF_API_TIMEOUT=${BOF_API_TIMEOUT:-10}
       - ANONYMIZED_TELEMETRY=false
