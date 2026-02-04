@@ -224,16 +224,18 @@ MOCK_REGISTRY_DATA = {
 
 
 class RegistryClient:
-    def __init__(self, base_url: str = "https://clumiddle.aodv.local/AC/pac/rest/paziente",
+    def __init__(self, base_url: Optional[str] = None,
                  timeout: int = 5, enabled: bool = True, mock: bool = False, cache_ttl_minutes: int = 30):
-        self.base_url = base_url.rstrip("/")
+        default_url = "https://clumiddle.aodv.local/AC/pac/rest/paziente"
+        self.base_url = (base_url or default_url).rstrip("/")
         self.timeout = timeout
-        self.enabled = enabled
+        # Disable if no URL provided and not in mock mode
+        self.enabled = enabled and (base_url is not None or mock)
         self.mock = mock
         self.cache_ttl = timedelta(minutes=cache_ttl_minutes)
         self._cache: Dict[str, tuple] = {}
         self._api_available: Optional[bool] = None
-        logger.info(f"RegistryClient: enabled={enabled}, mock={mock}, timeout={timeout}s")
+        logger.info(f"RegistryClient: enabled={self.enabled}, mock={mock}, timeout={timeout}s, url={self.base_url}")
 
     def _is_cache_valid(self, fiscal_code: str) -> bool:
         if fiscal_code not in self._cache:

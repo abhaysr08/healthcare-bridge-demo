@@ -231,7 +231,9 @@ def is_patient_query(text: str) -> bool:
 
     patient_keywords = [
         'patient', 'paziente', 'pazienti', 'patients',
-        'tell me about', 'show me', 'mostrami', 'dimmi',
+        'tell me about', 'tell me something about', 'show me', 'mostrami', 'dimmi',
+        'info about', 'information about', 'details about', 'data about',
+        'who is', 'chi è', 'chi e',
         'fiscal code', 'codice fiscale',
         'clinical', 'clinico', 'diagnosis', 'diagnosi',
         'hospital', 'ospedale', 'visit', 'visita',
