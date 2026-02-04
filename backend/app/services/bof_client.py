@@ -10,18 +10,18 @@ logger = logging.getLogger(__name__)
 class BOFClient:
     """BOF API Client for protected discharges (dimissioni protette)."""
 
-    def __init__(self, base_url: str = "https://bof.asst-brianza.it/api/v1/index.php",
+    def __init__(self, base_url: Optional[str] = None,
                  token: Optional[str] = None, timeout: int = 10, enabled: bool = False):
-        self.base_url = base_url
+        self.base_url = base_url or "https://bof.asst-brianza.it/api/v1/index.php"
         self.token = token
         self.timeout = timeout
-        self.enabled = enabled and token is not None
+        self.enabled = enabled and token is not None and base_url is not None
         self._api_available: Optional[bool] = None
 
         if self.enabled:
             logger.info(f"BOFClient: enabled with token, timeout={timeout}s")
         else:
-            logger.info("BOFClient: disabled (no token or not enabled)")
+            logger.info(f"BOFClient: disabled (enabled={enabled}, has_token={token is not None}, has_url={base_url is not None})")
 
     async def get_protected_discharges(self, fiscal_code: str) -> List[ProtectedDischarge]:
         if not self.enabled:
