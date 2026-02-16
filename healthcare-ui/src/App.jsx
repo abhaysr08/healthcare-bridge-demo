@@ -1,10 +1,13 @@
-import Chatbot from './Chatbot'
-import './App.css'
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ChatPage from './pages/ChatPage';
+import ProfilePage from './pages/ProfilePage';
 
-function App() {
+export default function App() {
   return (
-    <Chatbot />
-  )
+    <Routes>
+      <Route path="/chat" element={<ChatPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="*" element={<Navigate to="/chat" replace />} />
+    </Routes>
+  );
 }
-
-export default App
