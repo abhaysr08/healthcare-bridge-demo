@@ -57,7 +57,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Personal Information */}
-        <div className="px-6 pb-6">
+        <div className="max-w-md mx-auto px-6 pb-6">
           <h3 className="text-base font-semibold text-text-primary mb-4">
             Personal Information
           </h3>
