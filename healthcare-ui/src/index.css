@@ -1,18 +1,15 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+@import "tailwindcss";
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-#root {
-  width: 100%;
-  height: 100vh;
+@theme {
+  --color-navy: #225884;
+  --color-navy-dark: #1a4568;
+  --color-teal: #225884;
+  --color-teal-dark: #1a4568;
+  --color-teal-light: #2d6fa0;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fef3c7;
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-chat-bg: #f5f7fb;
+  --color-text-primary: #1C1C1C;
 }

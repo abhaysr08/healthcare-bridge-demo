@@ -1,0 +1,20 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="60" cy="60" r="60" fill="#E8F4F8"/>
+  <!-- Hair -->
+  <ellipse cx="60" cy="45" rx="28" ry="30" fill="#3B2314"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="52" rx="22" ry="24" fill="#F5D0A9"/>
+  <!-- Eyes -->
+  <ellipse cx="51" cy="50" rx="2.5" ry="3" fill="#3B2314"/>
+  <ellipse cx="69" cy="50" rx="2.5" ry="3" fill="#3B2314"/>
+  <!-- Smile -->
+  <path d="M52 58 Q60 65 68 58" stroke="#3B2314" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <!-- Body/Scrubs -->
+  <path d="M30 95 Q30 75 60 72 Q90 75 90 95 L90 120 L30 120 Z" fill="#1a3a4a"/>
+  <!-- Collar -->
+  <path d="M48 72 L60 82 L72 72" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Hair sides -->
+  <path d="M38 38 Q32 50 35 65" stroke="#3B2314" stroke-width="6" fill="none" stroke-linecap="round"/>
+  <path d="M82 38 Q88 50 85 65" stroke="#3B2314" stroke-width="6" fill="none" stroke-linecap="round"/>
+</svg>
