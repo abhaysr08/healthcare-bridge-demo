@@ -3,16 +3,26 @@ ETL script for Aurora Oracle Database
 Extracts clinical events from PAZIENTI_ACCESSO2 view
 """
 import os
-import cx_Oracle
 import logging
 from datetime import datetime, timedelta
 from db_connection import DatabaseConnection
+
+try:
+    import cx_Oracle
+    ORACLE_AVAILABLE = True
+except ImportError:
+    ORACLE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
 
 class AuroraETL:
     def __init__(self):
+        if not ORACLE_AVAILABLE:
+            logger.warning("Oracle client not available - Aurora ETL disabled")
+            self.db = DatabaseConnection()
+            return
+
         self.host = os.getenv('AURORA_HOST', '10.30.208.195')
         self.port = int(os.getenv('AURORA_PORT', 1521))
         self.service = os.getenv('AURORA_SERVICE', 'E4CURE')
@@ -21,10 +31,13 @@ class AuroraETL:
         self.db = DatabaseConnection()
 
         if not self.password:
-            raise ValueError("AURORA_PASSWORD environment variable is required")
+            logger.warning("AURORA_PASSWORD not set - Aurora ETL will skip operations")
 
     def get_oracle_connection(self):
         """Create Oracle database connection"""
+        if not ORACLE_AVAILABLE:
+            logger.warning("Oracle client not available")
+            return None
         try:
             dsn = cx_Oracle.makedsn(self.host, self.port, service_name=self.service)
             conn = cx_Oracle.connect(user=self.user, password=self.password, dsn=dsn)
@@ -32,12 +45,17 @@ class AuroraETL:
             return conn
         except Exception as e:
             logger.error(f"Failed to connect to Aurora: {e}")
-            raise
+            return None
 
     def fetch_patient_events(self, fiscal_code, lookback_months=12):
         """Fetch clinical events for a patient from Aurora"""
+        if not ORACLE_AVAILABLE:
+            logger.info(f"Oracle not available, skipping Aurora sync for {fiscal_code}")
+            return []
         try:
             conn = self.get_oracle_connection()
+            if not conn:
+                return []
             cursor = conn.cursor()
 
             # Calculate lookback date
