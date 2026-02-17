@@ -56,15 +56,15 @@ class Patient(BaseModel):
     fiscal_code: str
     first_name: Optional[str]
     last_name: Optional[str]
-    birth_date: Optional[str]
+    birth_date: Optional[Any]
     sex: Optional[str]
     residence_address: Optional[str]
     domicile_address: Optional[str]
-    phone_numbers: Optional[List[str]]
+    phone_numbers: Optional[Any]
     email: Optional[str]
     primary_doctor_name: Optional[str]
     primary_doctor_email: Optional[str]
-    exemptions: Optional[List[str]]
+    exemptions: Optional[Any]
     disability_status: Optional[bool]
     disability_details: Optional[str]
     cps_active: Optional[bool]
@@ -72,14 +72,14 @@ class Patient(BaseModel):
     caregiver_name: Optional[str]
     caregiver_relationship: Optional[str]
     caregiver_phone: Optional[str]
-    last_validated: Optional[str]
+    last_validated: Optional[Any]
 
 
 class ClinicalEvent(BaseModel):
     id: int
     event_type: str
-    event_date: str
-    discharge_date: Optional[str]
+    event_date: Any
+    discharge_date: Optional[Any]
     diagnosis: Optional[str]
     diagnosis_code: Optional[str]
     department: Optional[str]
@@ -90,7 +90,7 @@ class ClinicalEvent(BaseModel):
 
 class ProtectedDischarge(BaseModel):
     id: int
-    discharge_date: Optional[str]
+    discharge_date: Optional[Any]
     discharge_type: Optional[str]
     discharge_status: Optional[str]
     home_care_active: Optional[bool]
@@ -99,7 +99,7 @@ class ProtectedDischarge(BaseModel):
     palliative_care: Optional[bool]
     hospice: Optional[bool]
     social_services_active: Optional[bool]
-    sgdt_last_visit_date: Optional[str]
+    sgdt_last_visit_date: Optional[Any]
     sgdt_last_visit_operator: Optional[str]
 
 
