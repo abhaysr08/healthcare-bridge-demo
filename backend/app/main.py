@@ -20,6 +20,10 @@ from .config import (
     BOF_API_TOKEN,
     BOF_API_TIMEOUT,
     BOF_API_ENABLED,
+    CONSOLIDATED_API_URL,
+    CONSOLIDATED_API_TOKEN,
+    CONSOLIDATED_API_TIMEOUT,
+    CONSOLIDATED_API_ENABLED,
     get_config_summary
 )
 from .models import ChatRequest, ChatResponse
@@ -27,6 +31,7 @@ from .vector_store import VectorStoreManager, create_rag_context
 from .utils import get_system_prompt
 from .services.registry_client import RegistryClient
 from .services.bof_client import BOFClient
+from .services.consolidated_client import ConsolidatedAPIClient
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,27 +56,43 @@ vector_store: Optional[VectorStoreManager] = None
 registry_client: Optional[RegistryClient] = None
 bof_client: Optional[BOFClient] = None
 
+# Consolidated API client (AI1 via VPN) - when enabled, replaces Registry + BOF direct calls
+consolidated_client: Optional[ConsolidatedAPIClient] = None
+
 
 @app.on_event("startup")
 async def startup_event():
-    global vector_store, registry_client, bof_client
+    global vector_store, registry_client, bof_client, consolidated_client
 
     logger.info("Starting Healthbridge Care API v3.0 (RAG-based)")
     logger.info(f"Configuration: {json.dumps(get_config_summary(), indent=2)}")
 
     try:
-        # Initialize external API clients
+        # Initialize Consolidated API client (AI1 via VPN)
+        consolidated_client = ConsolidatedAPIClient(
+            base_url=CONSOLIDATED_API_URL,
+            token=CONSOLIDATED_API_TOKEN,
+            timeout=CONSOLIDATED_API_TIMEOUT,
+            enabled=CONSOLIDATED_API_ENABLED
+        )
+
+        if CONSOLIDATED_API_ENABLED:
+            logger.info(f"Consolidated API enabled - enrichment via AI1 at {CONSOLIDATED_API_URL}")
+        else:
+            logger.info("Consolidated API disabled - using direct Registry and BOF APIs")
+
+        # Initialize direct API clients (used when consolidated API is disabled)
         registry_client = RegistryClient(
             base_url=REGISTRY_API_URL,
             timeout=REGISTRY_API_TIMEOUT,
-            enabled=REGISTRY_API_ENABLED
+            enabled=REGISTRY_API_ENABLED and not CONSOLIDATED_API_ENABLED
         )
 
         bof_client = BOFClient(
             base_url=BOF_API_URL,
             token=BOF_API_TOKEN,
             timeout=BOF_API_TIMEOUT,
-            enabled=BOF_API_ENABLED
+            enabled=BOF_API_ENABLED and not CONSOLIDATED_API_ENABLED
         )
 
         # Initialize RAG vector store with Aurora data
@@ -148,14 +169,52 @@ async def get_patient(fiscal_code: str):
 
 
 async def enrich_patient_data(fiscal_code: str, patient_data: dict) -> dict:
-    """Enrich patient data from vector store with external API data."""
+    """Enrich patient data from vector store with external API data.
+
+    Priority:
+    1. Consolidated API (AI1 via VPN) - single call returns Registry + BOF + Aurora data
+    2. Direct Registry API + BOF API calls (fallback, only when consolidated is disabled)
+    """
     enriched = {
         **patient_data['patient'],
         'clinical_events': patient_data['events'],
         'sources': ['rag_vector_store']
     }
 
-    # Enrich with Registry API
+    # Option 1: Use consolidated API (preferred - AI1 has internal access to everything)
+    if consolidated_client and consolidated_client.enabled:
+        consolidated_data = await consolidated_client.get_patient(fiscal_code)
+        if consolidated_data:
+            patient_info = consolidated_data.get('patient') or {}
+            enriched['validated'] = True
+            enriched['sources'].append('consolidated_api')
+
+            # Merge demographics from consolidated DB (Registry is source of truth)
+            for field in ['first_name', 'last_name', 'birth_date', 'sex',
+                          'residence_address', 'domicile_address', 'email',
+                          'primary_doctor_name', 'primary_doctor_email',
+                          'disability_status', 'disability_details',
+                          'cps_active', 'noa_sert_active',
+                          'caregiver_name', 'caregiver_relationship', 'caregiver_phone',
+                          'exemptions', 'phone_numbers']:
+                if patient_info.get(field) is not None:
+                    enriched[field] = patient_info[field]
+
+            # Add clinical events from consolidated DB if richer than local data
+            clinical_events = consolidated_data.get('clinical_events', [])
+            if clinical_events:
+                enriched['clinical_events_consolidated'] = clinical_events
+                enriched['sources'].append('aurora_consolidated')
+
+            # Add protected discharges from BOF (via consolidated)
+            protected = consolidated_data.get('protected_discharges', [])
+            if protected:
+                enriched['protected_discharges'] = protected
+                enriched['sources'].append('bof_consolidated')
+
+        return enriched
+
+    # Option 2: Direct API calls (used when consolidated API is disabled)
     if registry_client:
         registry_patient = await registry_client.get_patient(fiscal_code)
         if registry_patient:
@@ -172,7 +231,6 @@ async def enrich_patient_data(fiscal_code: str, patient_data: dict) -> dict:
                     'indirizzo': registry_patient.residenza.indirizzo
                 }
 
-    # Enrich with BOF API
     if bof_client:
         protected_discharges = await bof_client.get_protected_discharges(fiscal_code)
         if protected_discharges:
@@ -398,8 +456,15 @@ async def get_status():
             "initialized": True,
             "patient_count": vector_store.get_patient_count()
         }
-    if registry_client:
-        status["registry_api"] = {"available": registry_client.is_available()}
-    if bof_client:
-        status["bof_api"] = {"available": bof_client.is_available()}
+    if consolidated_client and consolidated_client.enabled:
+        status["consolidated_api"] = {
+            "enabled": True,
+            "url": CONSOLIDATED_API_URL,
+            "available": consolidated_client.is_available()
+        }
+    else:
+        if registry_client:
+            status["registry_api"] = {"available": registry_client.is_available()}
+        if bof_client:
+            status["bof_api"] = {"available": bof_client.is_available()}
     return status

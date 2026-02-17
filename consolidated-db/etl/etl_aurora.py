@@ -175,8 +175,38 @@ class AuroraETL:
         logger.info(f"Aurora sync completed for {fiscal_code}: {success_count} events inserted")
         return success_count, failed_count
 
+    def get_all_fiscal_codes(self):
+        """Get all distinct fiscal codes from Aurora PAZIENTI_ACCESSO2 view.
+        This is the source of truth for which patients exist in the hospital system."""
+        if not ORACLE_AVAILABLE:
+            logger.warning("Oracle client not available - cannot fetch fiscal codes from Aurora")
+            return []
+
+        conn = self.get_oracle_connection()
+        if not conn:
+            return []
+
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT DISTINCT cf FROM PAZIENTI_ACCESSO2 WHERE cf IS NOT NULL ORDER BY cf"
+            )
+            fiscal_codes = [row[0].strip().upper() for row in cursor if row[0]]
+            cursor.close()
+            conn.close()
+            logger.info(f"Fetched {len(fiscal_codes)} distinct fiscal codes from Aurora")
+            return fiscal_codes
+        except Exception as e:
+            logger.error(f"Failed to fetch fiscal codes from Aurora: {e}")
+            return []
+
     def sync_all_patients(self):
-        """Sync events for all patients in the database"""
+        """Sync events for all patients.
+
+        Priority order for fiscal codes:
+        1. Pull ALL fiscal codes directly from Aurora PAZIENTI_ACCESSO2 (source of truth)
+        2. Fall back to patients already in local PostgreSQL DB if Oracle unavailable
+        """
         logger.info("Starting Aurora ETL for all patients")
 
         self.db.update_etl_status('AURORA', 'RUNNING', 'ETL job started')
@@ -185,15 +215,21 @@ class AuroraETL:
         total_failed = 0
 
         try:
-            # Get all fiscal codes from patients table
-            with self.db.get_cursor() as cursor:
-                cursor.execute("SELECT fiscal_code FROM patients")
-                patients = cursor.fetchall()
+            # Try to get fiscal codes directly from Aurora first
+            fiscal_codes = self.get_all_fiscal_codes()
 
-            logger.info(f"Found {len(patients)} patients to sync")
+            if fiscal_codes:
+                logger.info(f"Using {len(fiscal_codes)} fiscal codes from Aurora PAZIENTI_ACCESSO2")
+            else:
+                # Fallback: use patients already in local DB
+                logger.info("Oracle unavailable, falling back to local patients table")
+                with self.db.get_cursor() as cursor:
+                    cursor.execute("SELECT fiscal_code FROM patients")
+                    rows = cursor.fetchall()
+                fiscal_codes = [row['fiscal_code'] for row in rows]
+                logger.info(f"Found {len(fiscal_codes)} patients in local DB to sync")
 
-            for patient in patients:
-                fiscal_code = patient['fiscal_code']
+            for fiscal_code in fiscal_codes:
                 success, failed = self.sync_patient_events(fiscal_code)
                 total_success += success
                 total_failed += failed

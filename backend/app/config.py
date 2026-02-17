@@ -38,6 +38,13 @@ BOF_API_TOKEN = os.getenv("BOF_API_TOKEN", None)
 BOF_API_TIMEOUT = int(os.getenv("BOF_API_TIMEOUT", "10"))
 BOF_API_ENABLED = os.getenv("BOF_API_ENABLED", "true").lower() == "true"
 
+# Consolidated API (AI1 server at 10.30.229.21 via VPN)
+# When enabled, replaces direct Registry and BOF API calls from AWS EC2
+CONSOLIDATED_API_URL = os.getenv("CONSOLIDATED_API_URL", "http://10.30.229.21:8080")
+CONSOLIDATED_API_TOKEN = os.getenv("CONSOLIDATED_API_TOKEN", "dev-token-12345")
+CONSOLIDATED_API_TIMEOUT = int(os.getenv("CONSOLIDATED_API_TIMEOUT", "15"))
+CONSOLIDATED_API_ENABLED = os.getenv("CONSOLIDATED_API_ENABLED", "false").lower() == "true"
+
 
 def get_config_summary() -> dict:
     return {
@@ -53,5 +60,10 @@ def get_config_summary() -> dict:
             "enabled": BOF_API_ENABLED,
             "has_token": BOF_API_TOKEN is not None,
             "timeout": BOF_API_TIMEOUT
+        },
+        "consolidated_api": {
+            "url": CONSOLIDATED_API_URL,
+            "enabled": CONSOLIDATED_API_ENABLED,
+            "timeout": CONSOLIDATED_API_TIMEOUT
         }
     }

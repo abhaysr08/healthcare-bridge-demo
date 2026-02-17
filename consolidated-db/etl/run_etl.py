@@ -93,47 +93,46 @@ class ETLOrchestrator:
             'bof': {'success': 0, 'failed': 0}
         }
 
+        # STEP 0: If no fiscal codes provided, fetch ALL from Aurora (source of truth)
+        if not fiscal_codes:
+            logger.info("\n" + "=" * 80)
+            logger.info("STEP 0: Fetching all fiscal codes from Aurora PAZIENTI_ACCESSO2")
+            logger.info("=" * 80)
+            fiscal_codes = self.aurora_etl.get_all_fiscal_codes()
+            if fiscal_codes:
+                logger.info(f"Found {len(fiscal_codes)} fiscal codes in Aurora - will sync all")
+            else:
+                logger.warning("No fiscal codes from Aurora - nothing to sync")
+                return False
+
         # Step 1: Sync Registry (must run first - creates patient records)
         logger.info("\n" + "=" * 80)
         logger.info("STEP 1: Syncing Central Patient Registry")
         logger.info("=" * 80)
 
-        if fiscal_codes:
-            success, failed = self.registry_etl.sync_patient_list(fiscal_codes)
-            total_stats['registry']['success'] = success
-            total_stats['registry']['failed'] = failed
-        else:
-            logger.warning("No fiscal codes provided for Registry sync")
+        success, failed = self.registry_etl.sync_patient_list(fiscal_codes)
+        total_stats['registry']['success'] = success
+        total_stats['registry']['failed'] = failed
 
-        # Step 2: Sync Aurora (requires patients to exist)
+        # Step 2: Sync Aurora clinical events
         logger.info("\n" + "=" * 80)
         logger.info("STEP 2: Syncing Aurora Clinical Events")
         logger.info("=" * 80)
 
-        if fiscal_codes:
-            for fiscal_code in fiscal_codes:
-                success, failed = self.aurora_etl.sync_patient_events(fiscal_code)
-                total_stats['aurora']['success'] += success
-                total_stats['aurora']['failed'] += failed
-        else:
-            success, failed = self.aurora_etl.sync_all_patients()
-            total_stats['aurora']['success'] = success
-            total_stats['aurora']['failed'] = failed
+        for fiscal_code in fiscal_codes:
+            success, failed = self.aurora_etl.sync_patient_events(fiscal_code)
+            total_stats['aurora']['success'] += success
+            total_stats['aurora']['failed'] += failed
 
         # Step 3: Sync BOF (requires patients to exist)
         logger.info("\n" + "=" * 80)
         logger.info("STEP 3: Syncing BOF Protected Discharges")
         logger.info("=" * 80)
 
-        if fiscal_codes:
-            for fiscal_code in fiscal_codes:
-                success, failed = self.bof_etl.sync_patient_discharges(fiscal_code)
-                total_stats['bof']['success'] += success
-                total_stats['bof']['failed'] += failed
-        else:
-            success, failed = self.bof_etl.sync_all_patients()
-            total_stats['bof']['success'] = success
-            total_stats['bof']['failed'] = failed
+        for fiscal_code in fiscal_codes:
+            success, failed = self.bof_etl.sync_patient_discharges(fiscal_code)
+            total_stats['bof']['success'] += success
+            total_stats['bof']['failed'] += failed
 
         # Summary
         logger.info("\n" + "=" * 80)
@@ -154,19 +153,21 @@ class ETLOrchestrator:
 
 
 def main():
-    """Main entry point"""
+    """Main entry point.
+
+    Runs full ETL pipeline:
+    1. Fetches ALL fiscal codes from Aurora PAZIENTI_ACCESSO2 (source of truth)
+    2. Syncs each patient from Central Registry (creates patient records)
+    3. Syncs clinical events from Aurora for each patient
+    4. Syncs protected discharges from BOF for each patient
+
+    To sync specific patients only, pass fiscal_codes list to run_full_etl().
+    """
     orchestrator = ETLOrchestrator()
 
-    # Example: Sync specific patients
-    test_patients = [
-        "RSSMRA85M01F205X",
-        # Add more fiscal codes here
-    ]
+    # Pass no fiscal_codes - Aurora will be queried to get all of them
+    success = orchestrator.run_full_etl()
 
-    # Run ETL
-    success = orchestrator.run_full_etl(fiscal_codes=test_patients)
-
-    # Exit with appropriate code
     sys.exit(0 if success else 1)
 
 
