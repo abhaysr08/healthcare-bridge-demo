@@ -38,18 +38,17 @@ def main():
     """Main scheduler loop"""
     logger.info("ETL Scheduler starting...")
 
-    # Schedule ETL jobs
-    schedule.every(15).minutes.do(run_etl_job)  # Run every 15 minutes
+    # Run nightly at 02:00
+    schedule.every().day.at("02:00").do(run_etl_job)
 
-    # Run immediately on startup
+    # Run immediately on startup to populate DB
     logger.info("Running initial ETL on startup...")
     run_etl_job()
 
-    # Keep running
-    logger.info("ETL Scheduler running. Jobs scheduled every 15 minutes.")
+    logger.info("ETL Scheduler running. Next run scheduled at 02:00 daily.")
     while True:
         schedule.run_pending()
-        time.sleep(60)  # Check every minute
+        time.sleep(60)
 
 
 if __name__ == "__main__":
