@@ -325,32 +325,45 @@ async def chat(request: ChatRequest):
         else:
             fiscal_code = extract_fiscal_code(request.message)
 
-        # CASE 1: Fiscal code provided - exact lookup from vector store
+        # CASE 1: Fiscal code provided - go directly to consolidated API
         if fiscal_code:
-            logger.info(f"Fiscal code detected: {fiscal_code} - performing exact RAG lookup")
+            logger.info(f"Fiscal code detected: {fiscal_code} - querying consolidated API")
 
-            patient_data = vector_store.get_patient_by_fiscal_code(fiscal_code)
+            enriched = None
 
-            if patient_data:
-                # Enrich with external APIs
-                enriched = await enrich_patient_data(fiscal_code, patient_data)
-
-                context = f"\n\n**Patient Data (from RAG vector store):**\n```json\n{json.dumps(enriched, ensure_ascii=False, indent=2)}\n```"
-
-                messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
-                for msg in request.conversation_history:
-                    messages.append({"role": msg.role, "content": msg.content})
-                messages.append({"role": "user", "content": request.message})
-
-                response = client.chat.completions.create(
-                    model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=1000
-                )
-
-                return ChatResponse(response=response.choices[0].message.content, patient_context=enriched)
+            if consolidated_client and consolidated_client.enabled:
+                consolidated_data = await consolidated_client.get_patient(fiscal_code)
+                if consolidated_data and consolidated_data.get('patient_found'):
+                    patient_info = consolidated_data.get('patient') or {}
+                    enriched = {
+                        **patient_info,
+                        'clinical_events': consolidated_data.get('clinical_events', []),
+                        'protected_discharges': consolidated_data.get('protected_discharges', []),
+                        'sources': ['consolidated_api']
+                    }
+                    logger.info(f"Patient {fiscal_code} found in consolidated API")
             else:
-                logger.warning(f"Fiscal code {fiscal_code} not found in vector store")
+                # Fallback: try vector store if consolidated API is disabled
+                patient_data = vector_store.get_patient_by_fiscal_code(fiscal_code)
+                if patient_data:
+                    enriched = await enrich_patient_data(fiscal_code, patient_data)
+
+            if not enriched:
                 error_msg = "Paziente non trovato nel database. Verifica il codice fiscale e riprova." if lang == 'it' else "Patient not found in the database. Please verify the fiscal code and try again."
                 return ChatResponse(response=error_msg, patient_context=None)
+
+            context = f"\n\n**Patient Data:**\n```json\n{json.dumps(enriched, ensure_ascii=False, indent=2)}\n```"
+
+            messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
+            for msg in request.conversation_history:
+                messages.append({"role": msg.role, "content": msg.content})
+            messages.append({"role": "user", "content": request.message})
+
+            response = client.chat.completions.create(
+                model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=1000
+            )
+
+            return ChatResponse(response=response.choices[0].message.content, patient_context=enriched)
 
         # CASE 2: Patient query without fiscal code - semantic RAG search
         if is_patient_query(request.message):

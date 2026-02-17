@@ -41,28 +41,31 @@ class RegistryETL:
         if not raw_data:
             return None
 
-        # Map API fields to database schema
-        # Note: Field mapping will need adjustment based on actual API response structure
+        residenza = raw_data.get('Residenza') or {}
+        domicilio = raw_data.get('Domicilio') or {}
+        medico = raw_data.get('medicoCurante') or {}
+        caregiver = raw_data.get('caregiver') or {}
+
         transformed = {
-            'fiscal_code': raw_data.get('codiceFiscale'),
-            'first_name': raw_data.get('nome'),
-            'last_name': raw_data.get('cognome'),
-            'birth_date': raw_data.get('dataNascita'),
-            'sex': raw_data.get('sesso'),
-            'residence_address': raw_data.get('indirizzoResidenza'),
-            'domicile_address': raw_data.get('indirizzoDomicilio'),
-            'phone_numbers': raw_data.get('telefoni', []),  # JSONB array
+            'fiscal_code': raw_data.get('CodiceFiscale'),
+            'first_name': raw_data.get('Nome'),
+            'last_name': raw_data.get('Cognome'),
+            'birth_date': raw_data.get('DataNascita'),
+            'sex': raw_data.get('Sesso'),
+            'residence_address': residenza.get('Indirizzo'),
+            'domicile_address': domicilio.get('Indirizzo'),
+            'phone_numbers': raw_data.get('telefoni', []),
             'email': raw_data.get('email'),
-            'primary_doctor_name': raw_data.get('medicoCurante', {}).get('nome'),
-            'primary_doctor_email': raw_data.get('medicoCurante', {}).get('email'),
-            'exemptions': raw_data.get('esenzioni', []),  # JSONB array
+            'primary_doctor_name': medico.get('nome'),
+            'primary_doctor_email': medico.get('email'),
+            'exemptions': raw_data.get('esenzioni', []),
             'disability_status': raw_data.get('invalidita', False),
             'disability_details': raw_data.get('invaliditaDettagli'),
             'cps_active': raw_data.get('servizioPS', False),
             'noa_sert_active': raw_data.get('servizioNOA', False),
-            'caregiver_name': raw_data.get('caregiver', {}).get('nome'),
-            'caregiver_relationship': raw_data.get('caregiver', {}).get('relazione'),
-            'caregiver_phone': raw_data.get('caregiver', {}).get('telefono'),
+            'caregiver_name': caregiver.get('nome'),
+            'caregiver_relationship': caregiver.get('relazione'),
+            'caregiver_phone': caregiver.get('telefono'),
             'source_system': 'CENTRAL_REGISTRY',
             'last_validated': datetime.now()
         }
