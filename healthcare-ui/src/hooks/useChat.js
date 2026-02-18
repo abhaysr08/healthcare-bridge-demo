@@ -39,9 +39,10 @@ export default function useChat() {
           `${API_URL}/chat`,
           {
             message: userMessage,
-            conversation_history: messages.map(({ role, content }) => ({
+            conversation_history: messages.map(({ role, content, patientContext }) => ({
               role,
               content,
+              patient_context: patientContext || null,
             })),
           },
           {
