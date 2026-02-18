@@ -325,6 +325,14 @@ async def chat(request: ChatRequest):
         else:
             fiscal_code = extract_fiscal_code(request.message)
 
+        # Check if patient context was passed directly or is in conversation history
+        active_patient_context = request.patient_context
+        if not active_patient_context and request.conversation_history:
+            for msg in reversed(request.conversation_history):
+                if msg.patient_context:
+                    active_patient_context = msg.patient_context
+                    break
+
         # CASE 1: Fiscal code provided - go directly to consolidated API
         if fiscal_code:
             logger.info(f"Fiscal code detected: {fiscal_code} - querying consolidated API")
@@ -365,7 +373,20 @@ async def chat(request: ChatRequest):
 
             return ChatResponse(response=response.choices[0].message.content, patient_context=enriched)
 
-        # CASE 2: Patient query without fiscal code - semantic RAG search
+        # CASE 2: Follow-up question with existing patient context in conversation
+        if active_patient_context and not fiscal_code:
+            logger.info(f"Follow-up question detected - reusing patient context from conversation history")
+            context = f"\n\n**Patient Data (from previous context):**\n```json\n{json.dumps(active_patient_context, ensure_ascii=False, indent=2)}\n```"
+            messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
+            for msg in request.conversation_history:
+                messages.append({"role": msg.role, "content": msg.content})
+            messages.append({"role": "user", "content": request.message})
+            response = client.chat.completions.create(
+                model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=1000
+            )
+            return ChatResponse(response=response.choices[0].message.content, patient_context=active_patient_context)
+
+        # CASE 3: Patient query without fiscal code - semantic RAG search
         if is_patient_query(request.message):
             logger.info("Patient query detected - performing semantic RAG search")
 

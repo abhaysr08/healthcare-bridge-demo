@@ -5,11 +5,13 @@ from typing import List, Optional
 class ChatMessage(BaseModel):
     role: str
     content: str
+    patient_context: Optional[dict] = None
 
 
 class ChatRequest(BaseModel):
     message: str
     conversation_history: Optional[List[ChatMessage]] = []
+    patient_context: Optional[dict] = None
 
 
 class ChatResponse(BaseModel):
