@@ -240,6 +240,23 @@ async def enrich_patient_data(fiscal_code: str, patient_data: dict) -> dict:
     return enriched
 
 
+def calculate_age(birth_date_str) -> Optional[int]:
+    """Calculate exact age from birth_date string."""
+    if not birth_date_str:
+        return None
+    try:
+        from datetime import date
+        if isinstance(birth_date_str, str):
+            birth_date_str = birth_date_str[:10]  # take YYYY-MM-DD part
+            bd = date.fromisoformat(birth_date_str)
+        else:
+            bd = birth_date_str
+        today = date.today()
+        return today.year - bd.year - ((today.month, today.day) < (bd.month, bd.day))
+    except Exception:
+        return None
+
+
 def is_fiscal_code(text: str) -> bool:
     text = text.strip().upper()
     return len(text) == 16 and bool(re.match(r'^[A-Z0-9]{16}$', text))
@@ -349,6 +366,7 @@ async def chat(request: ChatRequest):
                         'protected_discharges': consolidated_data.get('protected_discharges', []),
                         'sources': ['consolidated_api']
                     }
+                    enriched['age_years'] = calculate_age(patient_info.get('birth_date'))
                     logger.info(f"Patient {fiscal_code} found in consolidated API")
             else:
                 # Fallback: try vector store if consolidated API is disabled
