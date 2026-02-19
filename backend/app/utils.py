@@ -86,7 +86,7 @@ You MUST include ALL of these fields when presenting patient data:
 
 1. **Identity Section:**
    - Full name (first_name + last_name)
-   - Age: ALWAYS calculate from birth_date to today. Formula: current_year - birth_year, minus 1 if birthday hasn't occurred yet this year. ALWAYS include age in the intro sentence (e.g. "paziente di 72 anni" or "72-year-old patient")
+   - Age: use the `age_years` field directly — it is pre-calculated and exact. ALWAYS include age in the intro sentence (e.g. "paziente di 72 anni" or "72-year-old patient"). NEVER recalculate age yourself.
    - Gender (from sex: M=maschio/male, F=femmina/female) — ALWAYS include in intro sentence
    - Fiscal code
    - Date of birth (birth_date)
