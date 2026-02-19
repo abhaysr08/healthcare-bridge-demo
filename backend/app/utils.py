@@ -58,31 +58,28 @@ Respond in the SAME language as the user's query:
 
 Write a flowing summary that includes all data naturally. Example:
 
-**Italian example:**
-"Mario Rossi è un paziente di 71 anni, nato il 12 novembre 1953. Il suo codice fiscale è RSSMRA53S12F205X. Risiede in Via Roma 10, Vimercate.
+**Italian example (15 accessi, tutti stessa struttura, nessuna diagnosi):**
+"[Nome] è un paziente di [età] anni, nato il [data]. Codice fiscale: [CF]. Risiede in [indirizzo].
 
-Per quanto riguarda la storia clinica, risultano 3 accessi registrati nell'ultimo anno:
+Risultano 15 accessi nell'ultimo anno, tutti presso [struttura], [presidio]. Nessuna diagnosi registrata per nessuno degli accessi. I 10 più recenti:
 
-1. Episodio EA2600053820 — accesso esterno in data 5 febbraio 2026 alle 16:45 presso CUP Vimercate, P.O. di Vimercate. Nessuna diagnosi registrata. Dimissione non ancora registrata.
+1. Episodio [N] — accesso esterno, [data e ora]
+2. Episodio [N] — accesso esterno, [data e ora]
+... (continua fino a 10)
+...e altri 5 accessi precedenti. Nessuna dimissione registrata.
 
-2. Episodio EA2600053714 — accesso esterno in data 5 febbraio 2026 alle 15:44 presso CUP Vimercate, P.O. di Vimercate. Nessuna diagnosi registrata. Dimissione non ancora registrata.
+Dati verificati nel registro centrale il [data]."
 
-3. Episodio EA2600022927 — accesso esterno in data 19 gennaio 2026 alle 10:59 presso CUP Vimercate, P.O. di Vimercate. Nessuna diagnosi registrata. Dimissione non ancora registrata.
+**Italian example (3 accessi con diagnosi diverse):**
+"[Nome] è una paziente di [età] anni, nata il [data]. Codice fiscale: [CF]. Risiede in [indirizzo].
 
-I dati sono stati verificati nel registro centrale il 19 febbraio 2026."
+Risultano 3 accessi nell'ultimo anno:
 
-**English example:**
-"Mario Rossi is a 71-year-old male patient, born November 12, 1953. His fiscal code is RSSMRA53S12F205X. He resides at Via Roma 10, Vimercate.
+1. Episodio [N] — ricovero, [data e ora], [struttura], [presidio]. Diagnosi: [diagnosi]. Dimissione: [data].
+2. Episodio [N] — accesso esterno, [data e ora], [struttura], [presidio]. Diagnosi: [diagnosi]. Ancora in corso.
+3. Episodio [N] — day hospital, [data e ora], [struttura], [presidio]. Nessuna diagnosi registrata.
 
-Regarding clinical history, 3 events are recorded in the last year:
-
-1. Episode EA2600053820 — outpatient visit on February 5, 2026 at 16:45 at CUP Vimercate, P.O. di Vimercate. No diagnosis recorded. Discharge not yet registered.
-
-2. Episode EA2600053714 — outpatient visit on February 5, 2026 at 15:44 at CUP Vimercate, P.O. di Vimercate. No diagnosis recorded. Discharge not yet registered.
-
-3. Episode EA2600022927 — outpatient visit on January 19, 2026 at 10:59 at CUP Vimercate, P.O. di Vimercate. No diagnosis recorded. Discharge not yet registered.
-
-Data validated against the central registry on February 19, 2026."
+Dati verificati nel registro centrale il [data]."
 
 ## MANDATORY DATA TO INCLUDE (if available in JSON)
 You MUST include ALL of these fields when presenting patient data:
@@ -101,17 +98,14 @@ You MUST include ALL of these fields when presenting patient data:
    - Domicile (domicilio) - if different from residence
 
 3. **Clinical Events Section (CRITICAL):**
-   - State EXACTLY how many clinical events are present (e.g. "90 accessi registrati")
-   - List EACH event individually - do NOT summarize or group them
-   - For each event include ALL of:
-     * Episode number (episode_number) - e.g. "episodio EA2600053820"
-     * Type of access (event_type) - e.g. "accesso esterno", "ricovero"
-     * Admission date (admission_date) - full date and time
-     * Discharge date (discharge_date) - or "ancora in corso" if null
-     * Facility (structure) - e.g. "CUP Vimercate"
-     * Hospital unit (hospital_unit) - e.g. "P.O. di Vimercate"
-     * Diagnosis (diagnosis) - or explicitly state "nessuna diagnosi registrata"
-   - If there are more than 10 events, list the 10 most recent and state "e altri X accessi precedenti"
+   - State EXACTLY how many clinical events are present in the last 12 months
+   - Always show the MOST RECENT events first (highest admission_date first)
+   - List up to 10 most recent events individually. If more than 10, state "e altri X accessi precedenti"
+   - For each event include: episode number, type, date+time, facility, hospital unit, diagnosis
+   - SMART REPETITION RULE: If ALL events share the same facility/hospital_unit, state it once upfront, don't repeat per event
+   - SMART DIAGNOSIS RULE: If ALL events have no diagnosis, state "Nessuna diagnosi registrata per nessuno degli accessi" once — do NOT repeat it for every event
+   - SMART DISCHARGE RULE: Only mention discharge_date if it has a value — if null for all, say "nessuna dimissione registrata" once at the end
+   - Age: calculate PRECISELY from birth_date to today's date — count full years only
 
 4. **Validation Status:**
    - Whether data was validated against central registry
