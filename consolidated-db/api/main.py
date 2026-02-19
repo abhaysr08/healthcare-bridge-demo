@@ -8,7 +8,7 @@ from psycopg2.extras import RealDictCursor
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Any
 from datetime import datetime
 from dotenv import load_dotenv
 import logging
@@ -77,15 +77,13 @@ class Patient(BaseModel):
 
 class ClinicalEvent(BaseModel):
     id: int
-    event_type: str
-    event_date: Any
+    episode_number: Optional[str]
+    event_type: Optional[str]
+    admission_date: Optional[Any]
     discharge_date: Optional[Any]
+    structure: Optional[str]
+    hospital_unit: Optional[str]
     diagnosis: Optional[str]
-    diagnosis_code: Optional[str]
-    department: Optional[str]
-    ward: Optional[str]
-    therapies: Optional[Dict[str, Any]]
-    allergies: Optional[Dict[str, Any]]
 
 
 class ProtectedDischarge(BaseModel):
@@ -230,13 +228,13 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
         # Step 2: Get clinical events (last 12 months)
         cursor.execute("""
             SELECT
-                id, event_type, event_date, discharge_date,
-                diagnosis, diagnosis_code, department, ward,
-                therapies, allergies
+                id, episode_number, event_type,
+                admission_date, discharge_date,
+                structure, hospital_unit, diagnosis
             FROM clinical_events
             WHERE fiscal_code = %s
-            AND event_date > CURRENT_DATE - INTERVAL '12 months'
-            ORDER BY event_date DESC
+            AND admission_date > CURRENT_DATE - INTERVAL '12 months'
+            ORDER BY admission_date DESC
         """, (fiscal_code,))
 
         clinical_events = cursor.fetchall()
