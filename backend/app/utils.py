@@ -85,13 +85,11 @@ Dati verificati nel registro centrale il [data]."
 You MUST include ALL of these fields when presenting patient data:
 
 1. **Identity Section:**
-   - Full name (cognome + nome)
-   - Age (calculated from data_nascita)
-   - Gender (from sesso: M=male/maschio, F=female/femmina)
-   - Fiscal code (codice_fiscale)
-   - IDAC identifier (idac)
-   - Date of birth (data_nascita)
-   - Place of birth (luogo_nascita)
+   - Full name (first_name + last_name)
+   - Age: ALWAYS calculate from birth_date to today. Formula: current_year - birth_year, minus 1 if birthday hasn't occurred yet this year. ALWAYS include age in the intro sentence (e.g. "paziente di 72 anni" or "72-year-old patient")
+   - Gender (from sex: M=maschio/male, F=femmina/female) — ALWAYS include in intro sentence
+   - Fiscal code
+   - Date of birth (birth_date)
 
 2. **Address Section:**
    - Residence (residenza) - full address with city
