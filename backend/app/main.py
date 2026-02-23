@@ -266,6 +266,9 @@ def extract_fiscal_code(text: str) -> Optional[str]:
     match = re.search(r'\b([A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z])\b', text.upper())
     if match:
         return match.group(1)
+    match = re.search(r'\b([A-Z0-9]{16})\b', text.upper())
+    if match:
+        return match.group(1)
     return None
 
 
