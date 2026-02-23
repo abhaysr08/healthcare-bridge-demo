@@ -99,18 +99,40 @@ class ProtectedDischarge(BaseModel):
     social_services_active: Optional[bool]
     sgdt_last_visit_date: Optional[Any]
     sgdt_last_visit_operator: Optional[str]
+    sgdt_notes: Optional[str]
+    patient_description: Optional[str]
+    care_level: Optional[str]
+    admission_date: Optional[Any]
+    operators_involved: Optional[str]
+
+
+class ProstheticsItem(BaseModel):
+    id: int
+    prescription_id: Optional[str]
+    delivery_note: Optional[str]
+    delivery_date: Optional[Any]
+    supplier_name: Optional[str]
+    product_code: Optional[str]
+    product_description: Optional[str]
+    brand: Optional[str]
+    model: Optional[str]
+    quantity: Optional[str]
+    total_price: Optional[Any]
+    status: Optional[str]
 
 
 class DataFreshness(BaseModel):
     registry_last_update: Optional[str]
     aurora_last_update: Optional[str]
     bof_last_update: Optional[str]
+    prosthetics_last_update: Optional[str]
 
 
 class PatientResponse(BaseModel):
     patient: Optional[Patient]
     clinical_events: List[ClinicalEvent]
     protected_discharges: List[ProtectedDischarge]
+    prosthetics_items: List[ProstheticsItem]
     data_freshness: DataFreshness
     patient_found: bool
 
@@ -217,10 +239,12 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
                 patient=None,
                 clinical_events=[],
                 protected_discharges=[],
+                prosthetics_items=[],
                 data_freshness=DataFreshness(
                     registry_last_update=None,
                     aurora_last_update=None,
-                    bof_last_update=None
+                    bof_last_update=None,
+                    prosthetics_last_update=None
                 ),
                 patient_found=False
             )
@@ -239,13 +263,14 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
 
         clinical_events = cursor.fetchall()
 
-        # Step 3: Get protected discharges (active and recent)
+        # Step 3: Get protected discharges
         cursor.execute("""
             SELECT
                 id, discharge_date, discharge_type, discharge_status,
                 home_care_active, home_care_provider, home_care_pathway,
                 palliative_care, hospice, social_services_active,
-                sgdt_last_visit_date, sgdt_last_visit_operator
+                sgdt_last_visit_date, sgdt_last_visit_operator, sgdt_notes,
+                patient_description, care_level, admission_date, operators_involved
             FROM protected_discharges
             WHERE fiscal_code = %s
             ORDER BY discharge_date DESC
@@ -253,7 +278,20 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
 
         discharges = cursor.fetchall()
 
-        # Step 4: Get data freshness
+        # Step 4: Get prosthetics items
+        cursor.execute("""
+            SELECT
+                id, prescription_id, delivery_note, delivery_date,
+                supplier_name, product_code, product_description,
+                brand, model, quantity, total_price, status
+            FROM prosthetics_items
+            WHERE fiscal_code = %s
+            ORDER BY delivery_date DESC
+        """, (fiscal_code,))
+
+        prosthetics = cursor.fetchall()
+
+        # Step 5: Get data freshness
         cursor.execute("""
             SELECT source_system, last_successful_run
             FROM etl_metadata
@@ -263,7 +301,8 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
         freshness = {
             'registry_last_update': None,
             'aurora_last_update': None,
-            'bof_last_update': None
+            'bof_last_update': None,
+            'prosthetics_last_update': None
         }
 
         for status in etl_status:
@@ -275,6 +314,8 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
                 freshness['aurora_last_update'] = timestamp.isoformat() if timestamp else None
             elif system == 'BOF':
                 freshness['bof_last_update'] = timestamp.isoformat() if timestamp else None
+            elif system == 'PROSTHETICS_NFS':
+                freshness['prosthetics_last_update'] = timestamp.isoformat() if timestamp else None
 
         cursor.close()
         conn.close()
@@ -284,6 +325,7 @@ def get_patient(fiscal_code: str, authorized: bool = Depends(verify_token)):
             patient=Patient(**dict(patient_data)),
             clinical_events=[ClinicalEvent(**dict(event)) for event in clinical_events],
             protected_discharges=[ProtectedDischarge(**dict(discharge)) for discharge in discharges],
+            prosthetics_items=[ProstheticsItem(**dict(item)) for item in prosthetics],
             data_freshness=DataFreshness(**freshness),
             patient_found=True
         )
