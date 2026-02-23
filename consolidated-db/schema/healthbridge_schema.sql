@@ -198,6 +198,7 @@ CREATE TABLE prosthetics_items (
 CREATE INDEX idx_prosthetics_fiscal_code   ON prosthetics_items(fiscal_code);
 CREATE INDEX idx_prosthetics_delivery_date ON prosthetics_items(delivery_date DESC);
 
+CREATE UNIQUE INDEX idx_protected_discharges_source_record ON protected_discharges(source_record_id) WHERE source_record_id IS NOT NULL;
 CREATE INDEX idx_protected_discharges_fiscal_code ON protected_discharges(fiscal_code);
 CREATE INDEX idx_protected_discharges_status      ON protected_discharges(discharge_status);
 CREATE INDEX idx_protected_discharges_date        ON protected_discharges(discharge_date DESC);

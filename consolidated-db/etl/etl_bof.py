@@ -91,6 +91,10 @@ class BofETL:
             'sgdt_notes': raw_data.get('note'),
             'measure_b1_active': False,
             'nad_nutrition_active': False,
+            'patient_description': raw_data.get('descrizione_paziente'),
+            'care_level': raw_data.get('livello_label'),
+            'admission_date': parse_date(raw_data.get('data_ricovero')),
+            'operators_involved': raw_data.get('operatori_coinvolti_label'),
             'source_system': 'BOF',
             'source_record_id': str(raw_data.get('id')) if raw_data.get('id') else None
         }
@@ -113,7 +117,7 @@ class BofETL:
                     logger.warning(f"Patient {discharge_data['fiscal_code']} not found, skipping discharge")
                     return False
 
-                # Upsert protected discharge
+                # Upsert protected discharge (conflict on source_record_id for idempotent syncs)
                 cursor.execute("""
                     INSERT INTO protected_discharges (
                         fiscal_code, discharge_date, discharge_type, discharge_status,
@@ -122,6 +126,7 @@ class BofETL:
                         social_services_active, social_services_notes,
                         sgdt_last_visit_date, sgdt_last_visit_operator, sgdt_notes,
                         measure_b1_active, nad_nutrition_active,
+                        patient_description, care_level, admission_date, operators_involved,
                         source_system, source_record_id, updated_at
                     ) VALUES (
                         %(fiscal_code)s, %(discharge_date)s, %(discharge_type)s, %(discharge_status)s,
@@ -130,9 +135,12 @@ class BofETL:
                         %(social_services_active)s, %(social_services_notes)s,
                         %(sgdt_last_visit_date)s, %(sgdt_last_visit_operator)s, %(sgdt_notes)s,
                         %(measure_b1_active)s, %(nad_nutrition_active)s,
+                        %(patient_description)s, %(care_level)s, %(admission_date)s, %(operators_involved)s,
                         %(source_system)s, %(source_record_id)s, CURRENT_TIMESTAMP
                     )
-                    ON CONFLICT (id) DO UPDATE SET
+                    ON CONFLICT (source_record_id) DO UPDATE SET
+                        discharge_date = EXCLUDED.discharge_date,
+                        discharge_type = EXCLUDED.discharge_type,
                         discharge_status = EXCLUDED.discharge_status,
                         home_care_active = EXCLUDED.home_care_active,
                         home_care_provider = EXCLUDED.home_care_provider,
@@ -146,6 +154,10 @@ class BofETL:
                         sgdt_notes = EXCLUDED.sgdt_notes,
                         measure_b1_active = EXCLUDED.measure_b1_active,
                         nad_nutrition_active = EXCLUDED.nad_nutrition_active,
+                        patient_description = EXCLUDED.patient_description,
+                        care_level = EXCLUDED.care_level,
+                        admission_date = EXCLUDED.admission_date,
+                        operators_involved = EXCLUDED.operators_involved,
                         updated_at = CURRENT_TIMESTAMP
                 """, discharge_data)
 
