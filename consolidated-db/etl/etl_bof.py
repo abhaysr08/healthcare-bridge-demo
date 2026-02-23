@@ -61,31 +61,38 @@ class BofETL:
             return []
 
     def transform_discharge_data(self, raw_data, fiscal_code):
-        """Transform BOF API response to database schema"""
+        """Transform BOF API response to database schema using real field names."""
         if not raw_data:
             return None
 
-        # Map API fields to database schema
-        # Note: Field mapping will need adjustment based on actual API response structure
+        def parse_date(val):
+            if not val:
+                return None
+            try:
+                from datetime import datetime
+                return datetime.strptime(val, '%d/%m/%Y').date()
+            except Exception:
+                return None
+
         transformed = {
             'fiscal_code': fiscal_code,
-            'discharge_date': raw_data.get('dataDimissione'),
-            'discharge_type': raw_data.get('tipoDimissione'),
-            'discharge_status': raw_data.get('stato', 'ACTIVE'),
-            'home_care_active': raw_data.get('assistenzaDomiciliare', False),
-            'home_care_provider': raw_data.get('enteErogatore'),
-            'home_care_pathway': raw_data.get('percorso'),
-            'palliative_care': raw_data.get('curePalliative', False),
-            'hospice': raw_data.get('hospice', False),
-            'social_services_active': raw_data.get('serviziSociali', False),
-            'social_services_notes': raw_data.get('noteSociali'),
-            'sgdt_last_visit_date': raw_data.get('dataUltimaVisitaSGDT'),
-            'sgdt_last_visit_operator': raw_data.get('operatoreSGDT'),
-            'sgdt_notes': raw_data.get('noteSGDT'),
-            'measure_b1_active': raw_data.get('misuraB1', False),
-            'nad_nutrition_active': raw_data.get('NAD', False),
+            'discharge_date': parse_date(raw_data.get('data_dimissione')),
+            'discharge_type': raw_data.get('setting_finale_label'),
+            'discharge_status': 'ACTIVE',
+            'home_care_active': False,
+            'home_care_provider': raw_data.get('territorio_destinazione_label'),
+            'home_care_pathway': raw_data.get('servizi_attivati_label'),
+            'palliative_care': False,
+            'hospice': False,
+            'social_services_active': raw_data.get('servizi_sociali_comuni') is not None,
+            'social_services_notes': raw_data.get('servizi_sociali_comuni_label'),
+            'sgdt_last_visit_date': None,
+            'sgdt_last_visit_operator': raw_data.get('case_manager'),
+            'sgdt_notes': raw_data.get('note'),
+            'measure_b1_active': False,
+            'nad_nutrition_active': False,
             'source_system': 'BOF',
-            'source_record_id': raw_data.get('id')
+            'source_record_id': str(raw_data.get('id')) if raw_data.get('id') else None
         }
 
         return transformed

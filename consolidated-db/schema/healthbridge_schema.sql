@@ -137,12 +137,66 @@ CREATE TABLE protected_discharges (
     measure_b1_active       BOOLEAN DEFAULT FALSE,
     nad_nutrition_active    BOOLEAN DEFAULT FALSE,
 
+    -- Rich BOF fields
+    patient_description     TEXT,
+    care_level              TEXT,
+    admission_date          DATE,
+    operators_involved      TEXT,
+
     -- Metadata
     source_system       VARCHAR(50) DEFAULT 'BOF',
     source_record_id    VARCHAR(100),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ============================================================================
+-- Prosthetics Items Table
+-- Source: Oracle NFS DB - azeuro.CLIENTE_ASSISTANT
+-- One row per prescription/delivery
+-- ============================================================================
+CREATE TABLE prosthetics_items (
+    id                  SERIAL PRIMARY KEY,
+    fiscal_code         VARCHAR(16) NOT NULL REFERENCES patients(fiscal_code) ON DELETE CASCADE,
+
+    -- Prescription identifiers
+    prescription_id     VARCHAR(50),
+    delivery_note       VARCHAR(50),
+
+    -- Dates
+    delivery_date       TIMESTAMP,
+    send_date           TIMESTAMP,
+
+    -- Supplier
+    supplier_code       VARCHAR(50),
+    supplier_name       VARCHAR(200),
+
+    -- Product
+    product_code        VARCHAR(50),
+    product_description TEXT,
+    brand               VARCHAR(100),
+    model               VARCHAR(100),
+
+    -- Quantity / Price
+    quantity            VARCHAR(20),
+    unit_price          NUMERIC(10,2),
+    total_price         NUMERIC(10,2),
+
+    -- Administrative
+    district            VARCHAR(50),
+    status              VARCHAR(20),
+    operation_type      VARCHAR(10),
+
+    -- Metadata
+    source_system       VARCHAR(50) DEFAULT 'PROSTHETICS_NFS',
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_prescription UNIQUE (fiscal_code, prescription_id)
+);
+
+CREATE INDEX idx_prosthetics_fiscal_code   ON prosthetics_items(fiscal_code);
+CREATE INDEX idx_prosthetics_delivery_date ON prosthetics_items(delivery_date DESC);
 
 CREATE INDEX idx_protected_discharges_fiscal_code ON protected_discharges(fiscal_code);
 CREATE INDEX idx_protected_discharges_status      ON protected_discharges(discharge_status);
@@ -167,7 +221,8 @@ CREATE TABLE etl_metadata (
 INSERT INTO etl_metadata (source_system, last_run_status) VALUES
     ('CENTRAL_REGISTRY', 'PENDING'),
     ('AURORA', 'PENDING'),
-    ('BOF', 'PENDING');
+    ('BOF', 'PENDING'),
+    ('PROSTHETICS_NFS', 'PENDING');
 
 -- ============================================================================
 -- Views
