@@ -364,6 +364,7 @@ async def chat(request: ChatRequest):
                         **patient_info,
                         'clinical_events': consolidated_data.get('clinical_events', []),
                         'protected_discharges': consolidated_data.get('protected_discharges', []),
+                        'prosthetics_items': consolidated_data.get('prosthetics_items', []),
                         'sources': ['consolidated_api']
                     }
                     enriched['age_years'] = calculate_age(patient_info.get('birth_date'))
