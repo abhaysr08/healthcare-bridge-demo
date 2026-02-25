@@ -1,29 +1,23 @@
 import AppHeader from '../components/layout/AppHeader';
+import { useAuth } from '../contexts/AuthContext';
 import avatarImg from '../assets/avatar-nurse.svg';
 
 export default function ProfilePage() {
-  // Hardcoded user data
-  const user = {
-    fullName: 'Elisa Rossi',
-    designation: 'Home Care Nurse',
-    email: 'elisa@healthbridge.it',
-    contact: '+39 02 7654321',
-  };
+  const { user } = useAuth();
 
   const infoRows = [
-    { label: 'Full Name', value: user.fullName },
-    { label: 'Designation', value: user.designation },
-    { label: 'Email', value: user.email },
-    { label: 'Contact', value: user.contact },
+    { label: 'Full Name', value: user?.fullName },
+    { label: 'Designation', value: user?.designation },
+    { label: 'Email', value: user?.email },
+    { label: 'Contact', value: user?.contact },
   ];
 
   return (
     <div className="h-screen flex flex-col bg-navy">
       <AppHeader />
 
-      {/* White rounded card with avatar overlapping */}
       <div className="flex-1 mt-1 mb-3 mx-3 bg-white rounded-[2rem] overflow-hidden relative">
-        {/* Avatar positioned at top, overlapping the navy */}
+        {/* Avatar + name */}
         <div className="flex flex-col items-center pt-6 pb-4">
           <img
             src={avatarImg}
@@ -31,9 +25,9 @@ export default function ProfilePage() {
             className="w-24 h-24 rounded-full mb-3 object-cover border-4 border-white shadow-lg"
           />
           <h2 className="text-xl font-semibold text-navy mb-1">
-            {user.fullName}
+            {user?.fullName}
           </h2>
-          <p className="text-sm text-gray-500">{user.designation}</p>
+          <p className="text-sm text-gray-500">{user?.designation}</p>
         </div>
 
         {/* Change Profile button */}
@@ -64,9 +58,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             {infoRows.map(({ label, value }) => (
               <div key={label} className="grid grid-cols-[120px_1fr] gap-4">
-                <span className="text-sm font-medium text-navy">
-                  {label}
-                </span>
+                <span className="text-sm font-medium text-navy">{label}</span>
                 <span className="text-sm text-text-primary">{value || '---'}</span>
               </div>
             ))}
