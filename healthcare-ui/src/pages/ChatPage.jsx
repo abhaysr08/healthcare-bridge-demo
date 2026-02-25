@@ -1,3 +1,4 @@
+import { useAuth } from '../contexts/AuthContext';
 import AppHeader from '../components/layout/AppHeader';
 import ChatEmptyState from '../components/chat/ChatEmptyState';
 import ChatMessageList from '../components/chat/ChatMessageList';
@@ -5,6 +6,7 @@ import ChatInput from '../components/chat/ChatInput';
 import useChat from '../hooks/useChat';
 
 export default function ChatPage() {
+  const { user } = useAuth();
   const {
     messages,
     input,
@@ -16,7 +18,7 @@ export default function ChatPage() {
   } = useChat();
 
   const isEmpty = messages.length === 0;
-  const firstName = 'Elisa'; // Hardcoded default user
+  const firstName = user?.fullName?.split(' ')[0] || 'Utente';
 
   return (
     <div className="h-screen flex flex-col bg-navy">
