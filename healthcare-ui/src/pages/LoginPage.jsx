@@ -6,20 +6,36 @@ import PasswordInput from '../components/ui/PasswordInput';
 export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   if (isAuthenticated) return <Navigate to="/chat" replace />;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    const result = login(email, password);
-    if (result.success) {
-      navigate('/chat');
-    } else {
-      setError(result.error);
+    setLoading(true);
+    try {
+      const result = await login(username, password);
+      if (result.mustChangePassword) {
+        navigate('/change-password', { replace: true });
+      } else {
+        navigate('/chat', { replace: true });
+      }
+    } catch (err) {
+      const status = err.response?.status;
+      const detail = err.response?.data?.detail;
+      if (status === 423) {
+        setError('Account bloccato dopo troppi tentativi. Contattare l\'amministratore.');
+      } else if (status === 403) {
+        setError('Account disabilitato. Contattare l\'amministratore.');
+      } else {
+        setError(detail || 'Credenziali non valide.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,7 +48,7 @@ export default function LoginPage() {
       </header>
 
       <div className="flex-1 bg-white rounded-t-[2rem] mt-1 px-6 pt-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Login!</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Accedi</h2>
 
         {error && (
           <p className="text-red-500 text-sm mb-4">{error}</p>
@@ -41,15 +57,16 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1.5">
-              Email ID
+              Username
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter Email ID"
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Inserisci username"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal/30 focus:border-teal text-sm"
               required
+              autoComplete="username"
             />
           </div>
 
@@ -60,15 +77,16 @@ export default function LoginPage() {
             <PasswordInput
               value={password}
               onChange={setPassword}
-              placeholder="Enter Password"
+              placeholder="Inserisci password"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-teal text-white py-3 rounded-lg font-semibold hover:bg-teal-dark transition-colors cursor-pointer"
+            disabled={loading}
+            className="w-full bg-teal text-white py-3 rounded-lg font-semibold hover:bg-teal-dark transition-colors cursor-pointer disabled:opacity-50"
           >
-            Login
+            {loading ? 'Accesso in corso...' : 'Accedi'}
           </button>
         </form>
       </div>

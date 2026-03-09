@@ -1,0 +1,71 @@
+import logging
+from ..config import ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_FULL_NAME
+from .security import hash_password
+
+logger = logging.getLogger(__name__)
+
+CREATE_TABLES_SQL = """
+CREATE TABLE IF NOT EXISTS users (
+    id                   SERIAL PRIMARY KEY,
+    username             VARCHAR(100) UNIQUE NOT NULL,
+    hashed_password      VARCHAR(255) NOT NULL,
+    full_name            VARCHAR(255) NOT NULL,
+    designation          VARCHAR(255),
+    role                 VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'operator')),
+    is_active            BOOLEAN NOT NULL DEFAULT TRUE,
+    is_locked            BOOLEAN NOT NULL DEFAULT FALSE,
+    failed_login_count   INTEGER NOT NULL DEFAULT 0,
+    must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by           INTEGER REFERENCES users(id),
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash  VARCHAR(255) UNIQUE NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    revoked     BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    username    VARCHAR(100) NOT NULL,
+    action      VARCHAR(50) NOT NULL,
+    fiscal_code VARCHAR(16),
+    ip_address  VARCHAR(45),
+    details     JSONB,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id    ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_fiscal_code ON audit_logs(fiscal_code);
+"""
+
+
+async def initialize_database(pool):
+    async with pool.acquire() as conn:
+        await conn.execute(CREATE_TABLES_SQL)
+        logger.info("Auth tables verified/created")
+
+        # Seed admin if no users exist
+        count = await conn.fetchval("SELECT COUNT(*) FROM users")
+        if count == 0:
+            if not ADMIN_PASSWORD:
+                logger.warning("ADMIN_PASSWORD not set — skipping admin seed")
+                return
+            hashed = hash_password(ADMIN_PASSWORD)
+            await conn.execute(
+                """
+                INSERT INTO users (username, hashed_password, full_name, role, must_change_password)
+                VALUES ($1, $2, $3, 'admin', FALSE)
+                """,
+                ADMIN_USERNAME,
+                hashed,
+                ADMIN_FULL_NAME,
+            )
+            logger.info(f"Admin account seeded: username='{ADMIN_USERNAME}'")

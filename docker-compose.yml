@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: healthcare-postgres
+    environment:
+      - POSTGRES_DB=healthbridge
+      - POSTGRES_USER=healthbridge
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U healthbridge -d healthbridge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
@@ -23,6 +41,11 @@ services:
       - BOF_API_URL=${BOF_API_URL:-https://bof.asst-brianza.it/api/v1/index.php}
       - BOF_API_TOKEN=${BOF_API_TOKEN}
       - BOF_API_TIMEOUT=${BOF_API_TIMEOUT:-10}
+      - DATABASE_URL=${DATABASE_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - ADMIN_FULL_NAME=${ADMIN_FULL_NAME:-Amministratore Sistema}
       - ANONYMIZED_TELEMETRY=false
       - POSTHOG_DISABLED=true
       - LANGCHAIN_TRACING_V2=false
@@ -30,6 +53,9 @@ services:
       - ./backend/app:/app/app
       - ./backend/data:/app/data:ro
       - chroma-data:/app/chroma_db
+    depends_on:
+      postgres:
+        condition: service_healthy
     env_file:
       - .env
     restart: unless-stopped
@@ -45,16 +71,18 @@ services:
       context: ./healthcare-ui
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
-        # - VITE_API_URL=https://6c9921019269.ngrok-free.app
+        - VITE_API_URL=${VITE_API_URL:-https://localhost}
         - VITE_APP_NAME=${VITE_APP_NAME:-Healthbridge Care}
         - VITE_APP_SUBTITLE=${VITE_APP_SUBTITLE:-Assistente Cure Domiciliari}
+        - VITE_INACTIVITY_TIMEOUT_MINUTES=${VITE_INACTIVITY_TIMEOUT_MINUTES:-15}
     container_name: healthcare-frontend
-    ports:
-      - "${FRONTEND_PORT:-3000}:80"
+    network_mode: "host"
+    volumes:
+      - ./ssl:/etc/nginx/ssl:ro
     depends_on:
       - backend
     restart: unless-stopped
 
 volumes:
   chroma-data:
+  postgres-data:

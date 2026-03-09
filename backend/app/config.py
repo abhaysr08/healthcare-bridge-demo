@@ -45,6 +45,23 @@ CONSOLIDATED_API_TOKEN = os.getenv("CONSOLIDATED_API_TOKEN", "dev-token-12345")
 CONSOLIDATED_API_TIMEOUT = int(os.getenv("CONSOLIDATED_API_TIMEOUT", "15"))
 CONSOLIDATED_API_ENABLED = os.getenv("CONSOLIDATED_API_ENABLED", "false").lower() == "true"
 
+# PostgreSQL (auth DB — users, refresh tokens, audit logs)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://healthbridge:healthbridge@localhost:5432/healthbridge"
+)
+
+# JWT configuration
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-production")
+JWT_ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+
+# Initial admin account (seeded on first startup if no users exist)
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "Amministratore Sistema")
+
 
 def get_config_summary() -> dict:
     return {
