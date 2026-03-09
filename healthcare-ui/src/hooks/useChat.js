@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { useAuth } from '../contexts/AuthContext';
+import { api as chatApi } from '../services/authApi';
 
 export default function useChat() {
+  const { accessToken } = useAuth();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +35,8 @@ export default function useChat() {
       setIsLoading(true);
 
       try {
-        const response = await axios.post(
-          `${API_URL}/chat`,
+        const response = await chatApi.post(
+          '/chat',
           {
             message: userMessage,
             conversation_history: messages.map(({ role, content, patientContext }) => ({
@@ -48,7 +48,7 @@ export default function useChat() {
           {
             headers: {
               'Content-Type': 'application/json',
-              'ngrok-skip-browser-warning': 'true',
+              'Authorization': `Bearer ${accessToken}`,
             },
           }
         );
@@ -75,7 +75,7 @@ export default function useChat() {
         setIsLoading(false);
       }
     },
-    [isLoading, messages]
+    [isLoading, messages, accessToken]
   );
 
   return {

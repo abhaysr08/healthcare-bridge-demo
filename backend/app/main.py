@@ -3,14 +3,14 @@ import logging
 import re
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Depends, Request
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response as StarletteResponse
 from openai import OpenAI
 
 from .config import (
     OPENAI_API_KEY,
     MODEL_NAME,
-    CORS_ORIGINS,
     CHROMA_PERSIST_DIRECTORY,
     AURORA_DATA_PATH,
     REGISTRY_API_URL,
@@ -32,20 +32,38 @@ from .utils import get_system_prompt
 from .services.registry_client import RegistryClient
 from .services.bof_client import BOFClient
 from .services.consolidated_client import ConsolidatedAPIClient
+from .auth.database import get_pool, close_pool, get_db
+from .auth.init_db import initialize_database
+from .auth.router import router as auth_router
+from .auth.admin_router import router as admin_router
+from .auth.dependencies import require_operator_or_admin
+from .auth.audit import log_action
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Healthbridge Care API", version="3.0.0")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"],
-)
+class ReflectOriginMiddleware(BaseHTTPMiddleware):
+    """Reflects request Origin back — supports withCredentials on any port/domain."""
+    async def dispatch(self, request: Request, call_next):
+        origin = request.headers.get("origin")
+        if request.method == "OPTIONS":
+            response = StarletteResponse(status_code=204)
+        else:
+            response = await call_next(request)
+        if origin:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, ngrok-skip-browser-warning"
+            response.headers["Vary"] = "Origin"
+        return response
+
+app.add_middleware(ReflectOriginMiddleware)
+
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
+app.include_router(admin_router, prefix="/admin", tags=["admin"])
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
@@ -66,6 +84,14 @@ async def startup_event():
 
     logger.info("Starting Healthbridge Care API v3.0 (RAG-based)")
     logger.info(f"Configuration: {json.dumps(get_config_summary(), indent=2)}")
+
+    # Initialize PostgreSQL auth DB (creates tables + seeds admin if needed)
+    try:
+        pool = await get_pool()
+        await initialize_database(pool)
+        logger.info("Auth database initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize auth database: {e}")
 
     try:
         # Initialize Consolidated API client (AI1 via VPN)
@@ -148,14 +174,14 @@ async def root():
 
 
 @app.get("/patients")
-async def get_patients():
+async def get_patients(current_user=Depends(require_operator_or_admin)):
     if not vector_store:
         raise HTTPException(status_code=503, detail="Vector store not initialized")
     return vector_store.get_all_patients()
 
 
 @app.get("/patients/{fiscal_code}")
-async def get_patient(fiscal_code: str):
+async def get_patient(fiscal_code: str, current_user=Depends(require_operator_or_admin)):
     if not vector_store:
         raise HTTPException(status_code=503, detail="Vector store not initialized")
 
@@ -163,7 +189,6 @@ async def get_patient(fiscal_code: str):
     if not patient_data:
         raise HTTPException(status_code=404, detail="Patient not found")
 
-    # Enrich with external APIs if available
     enriched = await enrich_patient_data(fiscal_code, patient_data)
     return enriched
 
@@ -320,7 +345,7 @@ def is_patient_query(text: str) -> bool:
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def chat(request: ChatRequest, req: Request, current_user=Depends(require_operator_or_admin), db=Depends(get_db)):
     """
     RAG-based chat endpoint.
 
@@ -391,6 +416,13 @@ async def chat(request: ChatRequest):
 
             response = client.chat.completions.create(
                 model=MODEL_NAME, messages=messages, temperature=0.3, max_tokens=1000
+            )
+
+            await log_action(
+                db, current_user["id"], current_user["username"], "chat_query",
+                ip=req.client.host if req.client else None,
+                fiscal_code=fiscal_code,
+                details={"message_preview": request.message[:100]}
             )
 
             return ChatResponse(response=response.choices[0].message.content, patient_context=enriched)
@@ -480,7 +512,7 @@ async def chat(request: ChatRequest):
 
 
 @app.get("/search")
-async def search_patients(query: str, top_k: int = 5):
+async def search_patients(query: str, top_k: int = 5, current_user=Depends(require_operator_or_admin)):
     """
     RAG semantic search endpoint for patients.
     """

@@ -1,16 +1,31 @@
+import { useState, useRef } from 'react';
 import AppHeader from '../components/layout/AppHeader';
 import { useAuth } from '../contexts/AuthContext';
 import avatarImg from '../assets/avatar-nurse.svg';
 
 export default function ProfilePage() {
   const { user } = useAuth();
+  const [profilePic, setProfilePic] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const roleLabel = user?.role === 'admin' ? 'Amministratore' : 'Operatore';
+  const roleBadgeClass = user?.role === 'admin'
+    ? 'bg-teal/10 text-teal border border-teal/20'
+    : 'bg-navy/10 text-navy border border-navy/20';
 
   const infoRows = [
-    { label: 'Full Name', value: user?.fullName },
-    { label: 'Designation', value: user?.designation },
-    { label: 'Email', value: user?.email },
-    { label: 'Contact', value: user?.contact },
+    { label: 'Nome Completo', value: user?.fullName },
+    { label: 'Qualifica', value: user?.designation },
+    { label: 'Username', value: user?.username },
   ];
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setProfilePic(ev.target.result);
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="h-screen flex flex-col bg-navy">
@@ -20,19 +35,34 @@ export default function ProfilePage() {
         {/* Avatar + name */}
         <div className="flex flex-col items-center pt-6 pb-4">
           <img
-            src={avatarImg}
+            src={profilePic || avatarImg}
             alt="Profile"
             className="w-24 h-24 rounded-full mb-3 object-cover border-4 border-white shadow-lg"
           />
           <h2 className="text-xl font-semibold text-navy mb-1">
             {user?.fullName}
           </h2>
-          <p className="text-sm text-gray-500">{user?.designation}</p>
+          <p className="text-sm text-gray-500 mb-2">{user?.designation}</p>
+          <span className={`text-xs font-medium px-3 py-1 rounded-full ${roleBadgeClass}`}>
+            {roleLabel}
+          </span>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileChange}
+        />
 
         {/* Change Profile button */}
         <div className="flex justify-center mb-6">
-          <button className="flex items-center gap-2 border border-navy/20 rounded-full px-6 py-2 text-sm text-navy hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 border border-navy/20 rounded-full px-6 py-2 text-sm text-navy hover:bg-gray-50 transition-colors"
+          >
             <svg
               width="14"
               height="14"
@@ -43,8 +73,8 @@ export default function ProfilePage() {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
             </svg>
             <span>Change Profile</span>
           </button>
