@@ -143,24 +143,190 @@ def parse_aurora_json(json_path: str) -> tuple[Dict[str, Dict], Dict[str, List[D
     return patients, events
 
 
+def create_chronic_care_document(patient: Dict[str, Any]) -> str:
+    """
+    Create a rich text document for embedding a chronic-care home-monitoring
+    patient record (conditions, vitals trend, medication adherence, alerts).
+    """
+    parts = []
+
+    full_name = patient.get("full_name", "")
+    patient_id = patient.get("patient_id", "")
+    sex = patient.get("sex", "")
+    dob = patient.get("date_of_birth", "")
+
+    parts.append(f"Patient: {full_name}")
+    parts.append(f"Patient ID: {patient_id}")
+
+    if sex:
+        gender = "Male" if sex.upper() == "M" else "Female"
+        parts.append(f"Gender: {gender} ({sex})")
+
+    if dob:
+        age = calculate_age(dob)
+        if age:
+            parts.append(f"Date of Birth: {dob}, Age: {age} years")
+        else:
+            parts.append(f"Date of Birth: {dob}")
+
+    conditions = patient.get("conditions", [])
+    if conditions:
+        parts.append(f"Conditions: {', '.join(conditions)}")
+
+    if patient.get("care_program"):
+        enrollment = patient.get("enrollment_date", "")
+        parts.append(f"Care Program: {patient['care_program']} (enrolled {enrollment})" if enrollment else f"Care Program: {patient['care_program']}")
+
+    if patient.get("assigned_nurse"):
+        parts.append(f"Assigned Nurse: {patient['assigned_nurse']}")
+    if patient.get("assigned_doctor"):
+        parts.append(f"Assigned Doctor: {patient['assigned_doctor']}")
+
+    contact = patient.get("contact") or {}
+    if contact:
+        parts.append(
+            f"Contact: phone {contact.get('phone', 'n/a')}, email {contact.get('email', 'n/a')}, "
+            f"address {contact.get('address', 'n/a')}"
+        )
+
+    emergency_contact = patient.get("emergency_contact") or {}
+    if emergency_contact:
+        parts.append(
+            f"Emergency Contact: {emergency_contact.get('name', '')} "
+            f"({emergency_contact.get('relationship', '')}), {emergency_contact.get('phone', '')}"
+        )
+
+    insurance = patient.get("insurance") or {}
+    if insurance:
+        parts.append(f"Insurance: {insurance.get('provider', '')}, policy {insurance.get('policy_number', '')}")
+
+    allergies = patient.get("allergies", [])
+    parts.append(f"Allergies: {', '.join(allergies) if allergies else 'None known'}")
+
+    vitals = patient.get("vitals_history", [])
+    if vitals:
+        first, latest = vitals[0], vitals[-1]
+        parts.append(
+            f"Vitals trend ({first.get('date', '')} to {latest.get('date', '')}): "
+            f"blood pressure {first.get('blood_pressure', 'n/a')} -> {latest.get('blood_pressure', 'n/a')}, "
+            f"heart rate {first.get('heart_rate', 'n/a')} -> {latest.get('heart_rate', 'n/a')}, "
+            f"glucose {first.get('glucose', 'n/a')} -> {latest.get('glucose', 'n/a')}, "
+            f"weight {first.get('weight_kg', 'n/a')}kg -> {latest.get('weight_kg', 'n/a')}kg, "
+            f"SpO2 {first.get('spo2', 'n/a')}% -> {latest.get('spo2', 'n/a')}%"
+        )
+        parts.append("Vitals History:")
+        for v in vitals:
+            parts.append(
+                f"  {v.get('date', '')}: BP {v.get('blood_pressure', 'n/a')}, "
+                f"HR {v.get('heart_rate', 'n/a')}, Glucose {v.get('glucose', 'n/a')}, "
+                f"Weight {v.get('weight_kg', 'n/a')}kg, SpO2 {v.get('spo2', 'n/a')}% "
+                f"— {v.get('notes', '')}"
+            )
+
+    labs = patient.get("labs", [])
+    if labs:
+        parts.append("Lab Results:")
+        for lab in labs:
+            parts.append(
+                f"  {lab.get('date', '')}: {lab.get('test', '')} = {lab.get('value', '')} {lab.get('unit', '')} "
+                f"(reference range: {lab.get('reference_range', 'n/a')})"
+            )
+
+    medications = patient.get("medications", [])
+    if medications:
+        parts.append("Medications and Adherence:")
+        for med in medications:
+            parts.append(
+                f"  {med.get('name', '')} {med.get('dose', '')} ({med.get('frequency', '')}): "
+                f"{med.get('adherence_notes', '')}"
+            )
+
+    alerts = patient.get("alerts", [])
+    unresolved = [a for a in alerts if not a.get("resolved")]
+    if alerts:
+        parts.append("Alerts:")
+        for a in alerts:
+            status = "RESOLVED" if a.get("resolved") else "UNRESOLVED"
+            parts.append(f"  [{a.get('severity', '')}] {a.get('date', '')}: {a.get('message', '')} ({status})")
+    if unresolved:
+        parts.append(f"Unresolved alert count: {len(unresolved)}")
+
+    visits = patient.get("visit_history", [])
+    if visits:
+        parts.append("Visit History:")
+        for v in visits:
+            parts.append(f"  {v.get('date', '')} ({v.get('type', '')}): {v.get('summary', '')}")
+
+    care_plan = patient.get("care_plan") or {}
+    goals = care_plan.get("goals", [])
+    if goals:
+        parts.append("Care Plan Goals:")
+        for goal in goals:
+            parts.append(f"  - {goal}")
+    if care_plan.get("next_appointment"):
+        parts.append(f"Next Appointment: {care_plan['next_appointment']}")
+
+    return "\n".join(parts)
+
+
+def parse_chronic_care_json(json_path: str) -> Dict[str, Dict[str, Any]]:
+    """
+    Parse the chronic-care demo dataset (flat {"patients": [...]} array).
+    Returns patients keyed by patient_id.
+    """
+    patients: Dict[str, Dict[str, Any]] = {}
+
+    try:
+        path = Path(json_path)
+        if not path.exists():
+            logger.error(f"Chronic care data file not found: {json_path}")
+            return patients
+
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        for item in data.get("patients", []):
+            patient_id = item.get("patient_id", "").strip()
+            if not patient_id:
+                continue
+            patients[patient_id] = item
+
+        logger.info(f"Parsed {len(patients)} chronic-care patients")
+
+    except Exception as e:
+        logger.error(f"Failed to parse chronic-care JSON: {e}")
+
+    return patients
+
+
 class VectorStoreManager:
     """
     RAG-based vector store manager that handles all patient data through embeddings.
     This is the PRIMARY data source - no direct JSON loading needed elsewhere.
     """
 
-    def __init__(self, openai_client: OpenAI, persist_directory: str, aurora_data_path: Optional[str] = None):
+    def __init__(
+        self,
+        openai_client: OpenAI,
+        persist_directory: str,
+        aurora_data_path: Optional[str] = None,
+        patient_data_schema: str = "aurora",
+        chronic_care_data_path: Optional[str] = None,
+    ):
         self.openai_client = openai_client
         self.chroma_client = chromadb.PersistentClient(path=persist_directory)
         self.collection = None
         self.aurora_data_path = aurora_data_path
+        self.schema = patient_data_schema
 
         # In-memory storage for complete patient data (stored as metadata in ChromaDB)
         self._patients: Dict[str, Dict[str, Any]] = {}
         self._events: Dict[str, List[Dict[str, Any]]] = {}
 
-        # Load and parse data if path provided
-        if aurora_data_path:
+        # Load and parse data according to the selected schema
+        if self.schema == "chronic_care" and chronic_care_data_path:
+            self._patients = parse_chronic_care_json(chronic_care_data_path)
+        elif aurora_data_path:
             self._patients, self._events = parse_aurora_json(aurora_data_path)
 
     def initialize_collection(self):
@@ -200,28 +366,42 @@ class VectorStoreManager:
         metadatas = []
         ids = []
 
-        for cf, patient in self._patients.items():
-            patient_events = self._events.get(cf, [])
+        for key, patient in self._patients.items():
+            if self.schema == "chronic_care":
+                doc = create_chronic_care_document(patient)
+                unresolved = [a for a in patient.get("alerts", []) if not a.get("resolved")]
+                metadata = {
+                    "schema": "chronic_care",
+                    "patient_id": key,
+                    "full_name": patient.get("full_name", ""),
+                    "sex": patient.get("sex", ""),
+                    "date_of_birth": patient.get("date_of_birth", ""),
+                    "conditions": ", ".join(patient.get("conditions", [])),
+                    "assigned_nurse": patient.get("assigned_nurse", ""),
+                    "assigned_doctor": patient.get("assigned_doctor", ""),
+                    "unresolved_alert_count": len(unresolved),
+                    "patient_json": json.dumps(patient, ensure_ascii=False),
+                }
+                ids.append(f"patient_{key}")
+            else:
+                patient_events = self._events.get(key, [])
+                doc = create_patient_document(patient, patient_events)
+                metadata = {
+                    "schema": "aurora",
+                    "codice_fiscale": key,
+                    "nome": patient.get("nome", ""),
+                    "cognome": patient.get("cognome", ""),
+                    "sesso": patient.get("sesso", ""),
+                    "data_nascita": patient.get("data_nascita", ""),
+                    "id_anag": patient.get("id_anag", ""),
+                    "event_count": len(patient_events),
+                    "patient_json": json.dumps(patient, ensure_ascii=False),
+                    "events_json": json.dumps(patient_events, ensure_ascii=False)
+                }
+                ids.append(f"patient_{key}")
 
-            # Create rich document for embedding
-            doc = create_patient_document(patient, patient_events)
             documents.append(doc)
-
-            # Store complete patient data and events as JSON in metadata
-            metadata = {
-                "codice_fiscale": cf,
-                "nome": patient.get("nome", ""),
-                "cognome": patient.get("cognome", ""),
-                "sesso": patient.get("sesso", ""),
-                "data_nascita": patient.get("data_nascita", ""),
-                "id_anag": patient.get("id_anag", ""),
-                "event_count": len(patient_events),
-                # Store complete data as JSON strings for retrieval
-                "patient_json": json.dumps(patient, ensure_ascii=False),
-                "events_json": json.dumps(patient_events, ensure_ascii=False)
-            }
             metadatas.append(metadata)
-            ids.append(f"patient_{cf}")
 
         # Generate embeddings in batches
         batch_size = 100
@@ -281,21 +461,15 @@ class VectorStoreManager:
 
                 # Parse stored JSON data
                 patient_data = json.loads(metadata.get('patient_json', '{}'))
-                events_data = json.loads(metadata.get('events_json', '[]'))
+                events_data = json.loads(metadata.get('events_json', '[]')) if metadata.get('events_json') else []
 
                 search_results.append({
-                    'codice_fiscale': metadata.get('codice_fiscale', ''),
+                    'codice_fiscale': metadata.get('codice_fiscale') or metadata.get('patient_id', ''),
                     'patient': patient_data,
                     'events': events_data,
                     'similarity': similarity,
                     'document': document,
-                    'metadata': {
-                        'nome': metadata.get('nome', ''),
-                        'cognome': metadata.get('cognome', ''),
-                        'sesso': metadata.get('sesso', ''),
-                        'data_nascita': metadata.get('data_nascita', ''),
-                        'event_count': metadata.get('event_count', 0)
-                    }
+                    'metadata': dict(metadata)
                 })
 
         return search_results
@@ -320,19 +494,13 @@ class VectorStoreManager:
             if results['ids'] and len(results['ids']) > 0:
                 metadata = results['metadatas'][0]
                 patient_data = json.loads(metadata.get('patient_json', '{}'))
-                events_data = json.loads(metadata.get('events_json', '[]'))
+                events_data = json.loads(metadata.get('events_json', '[]')) if metadata.get('events_json') else []
 
                 return {
                     'codice_fiscale': fiscal_code,
                     'patient': patient_data,
                     'events': events_data,
-                    'metadata': {
-                        'nome': metadata.get('nome', ''),
-                        'cognome': metadata.get('cognome', ''),
-                        'sesso': metadata.get('sesso', ''),
-                        'data_nascita': metadata.get('data_nascita', ''),
-                        'event_count': metadata.get('event_count', 0)
-                    }
+                    'metadata': dict(metadata)
                 }
         except Exception as e:
             logger.debug(f"Vector store lookup failed for {fiscal_code}: {e}")
@@ -378,6 +546,36 @@ class VectorStoreManager:
 
         return patients
 
+    def get_all_chronic_care_patients(self) -> List[Dict[str, Any]]:
+        """Get all chronic-care patients with dashboard-relevant summary fields."""
+        if not self.collection:
+            raise ValueError("Collection not initialized")
+
+        results = self.collection.get(include=["metadatas"])
+
+        patients = []
+        if results['ids']:
+            for metadata in results['metadatas']:
+                if metadata.get('schema') != 'chronic_care':
+                    continue
+                patient_data = json.loads(metadata.get('patient_json', '{}'))
+                vitals = patient_data.get('vitals_history', [])
+                medications = patient_data.get('medications', [])
+                patients.append({
+                    'patient_id': metadata.get('patient_id', ''),
+                    'full_name': metadata.get('full_name', ''),
+                    'conditions': [c.strip() for c in metadata.get('conditions', '').split(',') if c.strip()],
+                    'assigned_nurse': metadata.get('assigned_nurse', ''),
+                    'assigned_doctor': metadata.get('assigned_doctor', ''),
+                    'unresolved_alert_count': metadata.get('unresolved_alert_count', 0),
+                    'latest_vitals': vitals[-1] if vitals else None,
+                    'vitals_history': vitals,
+                    'medications': medications,
+                    'alerts': patient_data.get('alerts', []),
+                })
+
+        return patients
+
     def get_patient_count(self) -> int:
         """Get total number of patients in vector store."""
         if not self.collection:
@@ -387,6 +585,12 @@ class VectorStoreManager:
     def patient_exists(self, fiscal_code: str) -> bool:
         """Check if patient exists in vector store."""
         return self.get_patient_by_fiscal_code(fiscal_code) is not None
+
+
+def _patient_display_name(patient: Dict[str, Any]) -> str:
+    if patient.get("full_name"):
+        return patient["full_name"]
+    return f"{patient.get('nome', '')} {patient.get('cognome', '')}".strip()
 
 
 def create_rag_context(search_results: List[Dict[str, Any]], query: str) -> str:
@@ -409,7 +613,7 @@ def create_rag_context(search_results: List[Dict[str, Any]], query: str) -> str:
         context = f"\n\n**Found {len(search_results)} matching patients:**\n"
         for result in search_results:
             patient = result['patient']
-            context += f"- {patient.get('nome', '')} {patient.get('cognome', '')} (CF: {result['codice_fiscale']})\n"
+            context += f"- {_patient_display_name(patient)} (ID: {result['codice_fiscale']})\n"
         return context
 
     # For specific patient queries, return detailed info
@@ -434,7 +638,7 @@ def create_rag_context(search_results: List[Dict[str, Any]], query: str) -> str:
     context = f"\n\n**Low confidence matches (top result: {similarity:.0%}):**\n"
     for result in search_results[:3]:
         patient = result['patient']
-        context += f"- {patient.get('nome', '')} {patient.get('cognome', '')} (CF: {result['codice_fiscale']}, match: {result['similarity']:.0%})\n"
-    context += "\n**Please provide a fiscal code for accurate patient lookup.**"
+        context += f"- {_patient_display_name(patient)} (ID: {result['codice_fiscale']}, match: {result['similarity']:.0%})\n"
+    context += "\n**Please provide a patient ID for accurate lookup.**"
 
     return context

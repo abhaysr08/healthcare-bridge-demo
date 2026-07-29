@@ -1,0 +1,1411 @@
+{
+  "patients": [
+    {
+      "patient_id": "PT-1001",
+      "full_name": "Maria Conti",
+      "date_of_birth": "1952-03-14",
+      "sex": "F",
+      "conditions": [
+        "Type 2 Diabetes",
+        "Hypertension"
+      ],
+      "assigned_nurse": "Giulia Bianchi",
+      "assigned_doctor": "Marco Rossi",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-04-15",
+      "contact": {
+        "phone": "+39 348 552 1190",
+        "email": "maria.conti@example.com",
+        "address": "Via Roma 22, Monza (MB)"
+      },
+      "emergency_contact": {
+        "name": "Paolo Conti",
+        "relationship": "Son",
+        "phone": "+39 347 118 8820"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-88213904"
+      },
+      "allergies": [
+        "Penicillin"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-01",
+          "blood_pressure": "148/92",
+          "heart_rate": 82,
+          "glucose": 178,
+          "weight_kg": 78.2,
+          "spo2": 97,
+          "notes": "Fasting glucose elevated, discussed diet"
+        },
+        {
+          "date": "2026-06-01",
+          "blood_pressure": "142/88",
+          "heart_rate": 79,
+          "glucose": 162,
+          "weight_kg": 77.5,
+          "spo2": 97,
+          "notes": "Slight improvement after medication adjustment"
+        },
+        {
+          "date": "2026-07-01",
+          "blood_pressure": "138/85",
+          "heart_rate": 76,
+          "glucose": 145,
+          "weight_kg": 76.9,
+          "spo2": 98,
+          "notes": "Trending toward target range"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Metformin",
+          "dose": "1000mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Consistently taken with meals, no missed doses reported"
+        },
+        {
+          "name": "Lisinopril",
+          "dose": "10mg",
+          "frequency": "once daily",
+          "adherence_notes": "Occasionally forgets evening dose per patient self-report"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-06-20",
+          "test": "HbA1c",
+          "value": 7.1,
+          "unit": "%",
+          "reference_range": "4.0-5.6"
+        },
+        {
+          "date": "2026-06-20",
+          "test": "eGFR",
+          "value": 82,
+          "unit": "mL/min/1.73m2",
+          "reference_range": ">90"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-06-15",
+          "severity": "medium",
+          "message": "Glucose reading above 180 mg/dL logged via home monitor",
+          "resolved": true
+        },
+        {
+          "date": "2026-07-10",
+          "severity": "low",
+          "message": "Missed scheduled follow-up call",
+          "resolved": false
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-04-20",
+          "type": "Home visit",
+          "summary": "Routine chronic care check-in, reviewed diet plan"
+        },
+        {
+          "date": "2026-06-01",
+          "type": "Telehealth",
+          "summary": "Medication adjustment discussion with Dr. Rossi"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Reduce HbA1c below 7.0%",
+          "Maintain blood pressure under 140/90",
+          "Improve evening medication adherence"
+        ],
+        "next_appointment": "2026-08-01"
+      }
+    },
+    {
+      "patient_id": "PT-1002",
+      "full_name": "Giuseppe Ferrari",
+      "date_of_birth": "1945-11-02",
+      "sex": "M",
+      "conditions": [
+        "COPD",
+        "Chronic Heart Failure"
+      ],
+      "assigned_nurse": "Giulia Bianchi",
+      "assigned_doctor": "Marco Rossi",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-03-02",
+      "contact": {
+        "phone": "+39 349 220 7743",
+        "email": "giuseppe.ferrari@example.com",
+        "address": "Via Manzoni 5, Monza (MB)"
+      },
+      "emergency_contact": {
+        "name": "Anna Ferrari",
+        "relationship": "Wife",
+        "phone": "+39 349 220 7744"
+      },
+      "insurance": {
+        "provider": "INPS Assistenza Sanitaria",
+        "policy_number": "INPS-55201177"
+      },
+      "allergies": [
+        "Sulfa drugs"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-05",
+          "blood_pressure": "130/80",
+          "heart_rate": 88,
+          "glucose": null,
+          "weight_kg": 84.0,
+          "spo2": 91,
+          "notes": "Mild shortness of breath reported"
+        },
+        {
+          "date": "2026-06-05",
+          "blood_pressure": "128/78",
+          "heart_rate": 90,
+          "glucose": null,
+          "weight_kg": 86.3,
+          "spo2": 89,
+          "notes": "Weight gain of 2.3kg in 30 days, possible fluid retention"
+        },
+        {
+          "date": "2026-07-05",
+          "blood_pressure": "132/82",
+          "heart_rate": 92,
+          "glucose": null,
+          "weight_kg": 87.1,
+          "spo2": 88,
+          "notes": "Continued weight gain, increased dyspnea on exertion"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Furosemide",
+          "dose": "40mg",
+          "frequency": "once daily",
+          "adherence_notes": "Adherence confirmed via pharmacy refill records"
+        },
+        {
+          "name": "Tiotropium inhaler",
+          "dose": "18mcg",
+          "frequency": "once daily",
+          "adherence_notes": "Patient reports inconsistent inhaler technique, needs re-education"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-01",
+          "test": "BNP",
+          "value": 420,
+          "unit": "pg/mL",
+          "reference_range": "<100"
+        },
+        {
+          "date": "2026-07-01",
+          "test": "SpO2 (resting)",
+          "value": 88,
+          "unit": "%",
+          "reference_range": "95-100"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-07-05",
+          "severity": "high",
+          "message": "Rapid weight gain (>2kg/week) and rising heart rate — possible CHF decompensation",
+          "resolved": false
+        },
+        {
+          "date": "2026-06-20",
+          "severity": "medium",
+          "message": "SpO2 dropped below 90% during home monitoring",
+          "resolved": true
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-05-10",
+          "type": "Home visit",
+          "summary": "Reviewed inhaler technique, reinforced fluid restriction"
+        },
+        {
+          "date": "2026-07-06",
+          "type": "Urgent telehealth",
+          "summary": "Flagged for possible ER referral due to weight gain and low SpO2"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Prevent CHF decompensation",
+          "Maintain weight within 2kg of baseline",
+          "Correct inhaler technique"
+        ],
+        "next_appointment": "2026-07-20"
+      }
+    },
+    {
+      "patient_id": "PT-1003",
+      "full_name": "Anna Romano",
+      "date_of_birth": "1960-07-22",
+      "sex": "F",
+      "conditions": [
+        "Hypertension"
+      ],
+      "assigned_nurse": "Giulia Bianchi",
+      "assigned_doctor": "Marco Rossi",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-05-15",
+      "contact": {
+        "phone": "+39 340 662 9981",
+        "email": "anna.romano@example.com",
+        "address": "Via Cavour 14, Monza (MB)"
+      },
+      "emergency_contact": {
+        "name": "Marco Romano",
+        "relationship": "Husband",
+        "phone": "+39 340 662 9982"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-77201455"
+      },
+      "allergies": [],
+      "vitals_history": [
+        {
+          "date": "2026-05-15",
+          "blood_pressure": "150/95",
+          "heart_rate": 74,
+          "glucose": 98,
+          "weight_kg": 68.0,
+          "spo2": 98,
+          "notes": "New patient baseline"
+        },
+        {
+          "date": "2026-06-15",
+          "blood_pressure": "136/86",
+          "heart_rate": 72,
+          "glucose": 95,
+          "weight_kg": 67.5,
+          "spo2": 98,
+          "notes": "Good response to amlodipine"
+        },
+        {
+          "date": "2026-07-15",
+          "blood_pressure": "128/82",
+          "heart_rate": 70,
+          "glucose": 94,
+          "weight_kg": 67.2,
+          "spo2": 99,
+          "notes": "Blood pressure well controlled"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Amlodipine",
+          "dose": "5mg",
+          "frequency": "once daily",
+          "adherence_notes": "Excellent adherence, uses pill organizer"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-15",
+          "test": "Potassium",
+          "value": 4.2,
+          "unit": "mmol/L",
+          "reference_range": "3.5-5.0"
+        }
+      ],
+      "alerts": [],
+      "visit_history": [
+        {
+          "date": "2026-05-15",
+          "type": "Home visit",
+          "summary": "Initial chronic care enrollment and education"
+        },
+        {
+          "date": "2026-07-15",
+          "type": "Telehealth",
+          "summary": "Routine follow-up, no concerns"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Maintain blood pressure under 130/85"
+        ],
+        "next_appointment": "2026-09-15"
+      }
+    },
+    {
+      "patient_id": "PT-1004",
+      "full_name": "Luigi Esposito",
+      "date_of_birth": "1948-01-30",
+      "sex": "M",
+      "conditions": [
+        "Type 2 Diabetes",
+        "Chronic Kidney Disease Stage 3"
+      ],
+      "assigned_nurse": "Elena Marino",
+      "assigned_doctor": "Sara Greco",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-05-08",
+      "contact": {
+        "phone": "+39 331 774 2210",
+        "email": "luigi.esposito@example.com",
+        "address": "Via Dante 9, Seregno (MB)"
+      },
+      "emergency_contact": {
+        "name": "Carla Esposito",
+        "relationship": "Daughter",
+        "phone": "+39 331 774 2211"
+      },
+      "insurance": {
+        "provider": "INPS Assistenza Sanitaria",
+        "policy_number": "INPS-99204471"
+      },
+      "allergies": [
+        "Iodine contrast"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-10",
+          "blood_pressure": "144/90",
+          "heart_rate": 80,
+          "glucose": 210,
+          "weight_kg": 92.4,
+          "spo2": 96,
+          "notes": "Poor glycemic control, referred for dietary counseling"
+        },
+        {
+          "date": "2026-06-10",
+          "blood_pressure": "140/88",
+          "heart_rate": 78,
+          "glucose": 195,
+          "weight_kg": 91.8,
+          "spo2": 96,
+          "notes": "Slight improvement, continues to struggle with diet adherence"
+        },
+        {
+          "date": "2026-07-10",
+          "blood_pressure": "146/91",
+          "heart_rate": 81,
+          "glucose": 225,
+          "weight_kg": 93.0,
+          "spo2": 95,
+          "notes": "Glucose spike, patient reports stress and dietary lapses"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Insulin glargine",
+          "dose": "24 units",
+          "frequency": "once nightly",
+          "adherence_notes": "Missed doses on 4 of last 14 days per glucose log gaps"
+        },
+        {
+          "name": "Metformin",
+          "dose": "500mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Dose reduced due to declining kidney function"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-06-28",
+          "test": "eGFR",
+          "value": 42,
+          "unit": "mL/min/1.73m2",
+          "reference_range": ">90"
+        },
+        {
+          "date": "2026-06-28",
+          "test": "HbA1c",
+          "value": 8.9,
+          "unit": "%",
+          "reference_range": "4.0-5.6"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-07-10",
+          "severity": "high",
+          "message": "Glucose reading of 225 mg/dL with declining medication adherence",
+          "resolved": false
+        },
+        {
+          "date": "2026-06-28",
+          "severity": "medium",
+          "message": "eGFR trending downward on last lab panel",
+          "resolved": false
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-05-12",
+          "type": "Home visit",
+          "summary": "Nutrition counseling referral initiated"
+        },
+        {
+          "date": "2026-06-30",
+          "type": "Clinic visit",
+          "summary": "Nephrology consult reviewed, kidney function monitored"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Stabilize eGFR above 40",
+          "Reduce HbA1c below 8.0%",
+          "Improve insulin adherence"
+        ],
+        "next_appointment": "2026-07-25"
+      }
+    },
+    {
+      "patient_id": "PT-1005",
+      "full_name": "Francesca Greco",
+      "date_of_birth": "1955-09-18",
+      "sex": "F",
+      "conditions": [
+        "COPD"
+      ],
+      "assigned_nurse": "Elena Marino",
+      "assigned_doctor": "Sara Greco",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-04-01",
+      "contact": {
+        "phone": "+39 333 891 4402",
+        "email": "francesca.greco@example.com",
+        "address": "Via Verdi 31, Seregno (MB)"
+      },
+      "emergency_contact": {
+        "name": "Luca Greco",
+        "relationship": "Son",
+        "phone": "+39 333 891 4403"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-44209981"
+      },
+      "allergies": [],
+      "vitals_history": [
+        {
+          "date": "2026-05-20",
+          "blood_pressure": "124/78",
+          "heart_rate": 84,
+          "glucose": null,
+          "weight_kg": 61.5,
+          "spo2": 93,
+          "notes": "Stable, mild wheeze on exam"
+        },
+        {
+          "date": "2026-06-20",
+          "blood_pressure": "122/76",
+          "heart_rate": 82,
+          "glucose": null,
+          "weight_kg": 61.8,
+          "spo2": 94,
+          "notes": "No exacerbations this month"
+        },
+        {
+          "date": "2026-07-20",
+          "blood_pressure": "126/79",
+          "heart_rate": 83,
+          "glucose": null,
+          "weight_kg": 62.0,
+          "spo2": 94,
+          "notes": "Continues stable on current regimen"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Salmeterol/Fluticasone inhaler",
+          "dose": "50/250mcg",
+          "frequency": "twice daily",
+          "adherence_notes": "Consistent use confirmed, good technique observed"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-10",
+          "test": "SpO2 (resting)",
+          "value": 94,
+          "unit": "%",
+          "reference_range": "95-100"
+        }
+      ],
+      "alerts": [],
+      "visit_history": [
+        {
+          "date": "2026-05-20",
+          "type": "Home visit",
+          "summary": "Routine respiratory check, spirometry stable"
+        },
+        {
+          "date": "2026-07-20",
+          "type": "Telehealth",
+          "summary": "No new symptoms reported"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Maintain SpO2 above 92%",
+          "Zero exacerbations this quarter"
+        ],
+        "next_appointment": "2026-08-20"
+      }
+    },
+    {
+      "patient_id": "PT-1006",
+      "full_name": "Roberto Marchetti",
+      "date_of_birth": "1950-04-09",
+      "sex": "M",
+      "conditions": [
+        "Chronic Heart Failure",
+        "Hypertension"
+      ],
+      "assigned_nurse": "Elena Marino",
+      "assigned_doctor": "Sara Greco",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-03-20",
+      "contact": {
+        "phone": "+39 347 205 1188",
+        "email": "roberto.marchetti@example.com",
+        "address": "Via Garibaldi 2, Seregno (MB)"
+      },
+      "emergency_contact": {
+        "name": "Elena Marchetti",
+        "relationship": "Wife",
+        "phone": "+39 347 205 1189"
+      },
+      "insurance": {
+        "provider": "INPS Assistenza Sanitaria",
+        "policy_number": "INPS-33208842"
+      },
+      "allergies": [
+        "Aspirin"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-25",
+          "blood_pressure": "118/74",
+          "heart_rate": 68,
+          "glucose": null,
+          "weight_kg": 79.0,
+          "spo2": 97,
+          "notes": "Well compensated, no edema"
+        },
+        {
+          "date": "2026-06-25",
+          "blood_pressure": "116/72",
+          "heart_rate": 66,
+          "glucose": null,
+          "weight_kg": 79.3,
+          "spo2": 97,
+          "notes": "Stable weight, adherent to sodium restriction"
+        },
+        {
+          "date": "2026-07-25",
+          "blood_pressure": "120/75",
+          "heart_rate": 70,
+          "glucose": null,
+          "weight_kg": 79.1,
+          "spo2": 97,
+          "notes": "Continues well-managed on current regimen"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Carvedilol",
+          "dose": "12.5mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Excellent adherence, no missed doses"
+        },
+        {
+          "name": "Furosemide",
+          "dose": "20mg",
+          "frequency": "once daily",
+          "adherence_notes": "Taken consistently in the morning"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-15",
+          "test": "BNP",
+          "value": 95,
+          "unit": "pg/mL",
+          "reference_range": "<100"
+        }
+      ],
+      "alerts": [],
+      "visit_history": [
+        {
+          "date": "2026-05-25",
+          "type": "Home visit",
+          "summary": "Routine CHF monitoring, no signs of decompensation"
+        },
+        {
+          "date": "2026-07-25",
+          "type": "Telehealth",
+          "summary": "Routine follow-up, patient doing well"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Maintain current weight within 1.5kg",
+          "Keep BNP under 100 pg/mL"
+        ],
+        "next_appointment": "2026-09-25"
+      }
+    },
+    {
+      "patient_id": "PT-1007",
+      "full_name": "Carla Villa",
+      "date_of_birth": "1958-12-05",
+      "sex": "F",
+      "conditions": [
+        "Type 2 Diabetes"
+      ],
+      "assigned_nurse": "Elena Marino",
+      "assigned_doctor": "Marco Rossi",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-05-01",
+      "contact": {
+        "phone": "+39 342 118 6620",
+        "email": "carla.villa@example.com",
+        "address": "Via Trento 18, Desio (MB)"
+      },
+      "emergency_contact": {
+        "name": "Davide Villa",
+        "relationship": "Son",
+        "phone": "+39 342 118 6621"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-22107733"
+      },
+      "allergies": [
+        "Latex"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-08",
+          "blood_pressure": "132/84",
+          "heart_rate": 75,
+          "glucose": 150,
+          "weight_kg": 70.4,
+          "spo2": 98,
+          "notes": "New enrollment, education on glucose monitoring"
+        },
+        {
+          "date": "2026-06-08",
+          "blood_pressure": "130/82",
+          "heart_rate": 74,
+          "glucose": 138,
+          "weight_kg": 69.8,
+          "spo2": 98,
+          "notes": "Improving with lifestyle changes"
+        },
+        {
+          "date": "2026-07-08",
+          "blood_pressure": "128/80",
+          "heart_rate": 73,
+          "glucose": 128,
+          "weight_kg": 69.0,
+          "spo2": 98,
+          "notes": "Approaching target glucose range, weight loss on track"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Metformin",
+          "dose": "500mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Good adherence, occasional GI upset noted and monitored"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-08",
+          "test": "HbA1c",
+          "value": 6.4,
+          "unit": "%",
+          "reference_range": "4.0-5.6"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-06-01",
+          "severity": "low",
+          "message": "Reported mild nausea after starting Metformin",
+          "resolved": true
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-05-08",
+          "type": "Home visit",
+          "summary": "Chronic care enrollment, glucose monitor training"
+        },
+        {
+          "date": "2026-07-08",
+          "type": "Telehealth",
+          "summary": "Positive progress review"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Reduce HbA1c below 6.0%",
+          "Continue gradual weight loss"
+        ],
+        "next_appointment": "2026-08-08"
+      }
+    },
+    {
+      "patient_id": "PT-1008",
+      "full_name": "Paolo Santoro",
+      "date_of_birth": "1947-06-27",
+      "sex": "M",
+      "conditions": [
+        "COPD",
+        "Type 2 Diabetes",
+        "Hypertension"
+      ],
+      "assigned_nurse": "Giulia Bianchi",
+      "assigned_doctor": "Sara Greco",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-02-10",
+      "contact": {
+        "phone": "+39 335 660 2298",
+        "email": "paolo.santoro@example.com",
+        "address": "Via Milano 40, Monza (MB)"
+      },
+      "emergency_contact": {
+        "name": "Giovanna Santoro",
+        "relationship": "Wife",
+        "phone": "+39 335 660 2299"
+      },
+      "insurance": {
+        "provider": "INPS Assistenza Sanitaria",
+        "policy_number": "INPS-11209955"
+      },
+      "allergies": [
+        "Penicillin",
+        "NSAIDs"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-12",
+          "blood_pressure": "152/94",
+          "heart_rate": 86,
+          "glucose": 188,
+          "weight_kg": 88.6,
+          "spo2": 90,
+          "notes": "Multiple comorbidities, complex care coordination needed"
+        },
+        {
+          "date": "2026-06-12",
+          "blood_pressure": "146/90",
+          "heart_rate": 84,
+          "glucose": 172,
+          "weight_kg": 88.0,
+          "spo2": 91,
+          "notes": "Gradual improvement across all metrics"
+        },
+        {
+          "date": "2026-07-12",
+          "blood_pressure": "140/88",
+          "heart_rate": 81,
+          "glucose": 160,
+          "weight_kg": 87.2,
+          "spo2": 92,
+          "notes": "Continued positive trend, patient engaged with care plan"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Metformin",
+          "dose": "1000mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Consistent adherence per pharmacy records"
+        },
+        {
+          "name": "Lisinopril",
+          "dose": "20mg",
+          "frequency": "once daily",
+          "adherence_notes": "Consistent adherence"
+        },
+        {
+          "name": "Tiotropium inhaler",
+          "dose": "18mcg",
+          "frequency": "once daily",
+          "adherence_notes": "Improved technique after nurse re-training"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-05",
+          "test": "HbA1c",
+          "value": 7.6,
+          "unit": "%",
+          "reference_range": "4.0-5.6"
+        },
+        {
+          "date": "2026-07-05",
+          "test": "SpO2 (resting)",
+          "value": 92,
+          "unit": "%",
+          "reference_range": "95-100"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-05-12",
+          "severity": "high",
+          "message": "Multiple uncontrolled conditions at intake — flagged for intensive care coordination",
+          "resolved": true
+        },
+        {
+          "date": "2026-07-01",
+          "severity": "low",
+          "message": "Minor scheduling conflict for follow-up visit",
+          "resolved": true
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-05-12",
+          "type": "Home visit",
+          "summary": "Comprehensive intake assessment across three conditions"
+        },
+        {
+          "date": "2026-06-12",
+          "type": "Home visit",
+          "summary": "Care plan adjustment, inhaler re-training"
+        },
+        {
+          "date": "2026-07-12",
+          "type": "Telehealth",
+          "summary": "Progress review, all metrics trending favorably"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Bring all three conditions to controlled range",
+          "Maintain SpO2 above 90%"
+        ],
+        "next_appointment": "2026-08-12"
+      }
+    },
+    {
+      "patient_id": "PT-1009",
+      "full_name": "Silvia Bruno",
+      "date_of_birth": "1963-02-14",
+      "sex": "F",
+      "conditions": [
+        "Hypertension",
+        "Obesity"
+      ],
+      "assigned_nurse": "Sofia Greco",
+      "assigned_doctor": "Andrea Colombo",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-06-01",
+      "contact": {
+        "phone": "+39 328 441 7723",
+        "email": "silvia.bruno@example.com",
+        "address": "Via Napoli 12, Vimercate (MB)"
+      },
+      "emergency_contact": {
+        "name": "Fabio Bruno",
+        "relationship": "Husband",
+        "phone": "+39 328 441 7724"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-66112287"
+      },
+      "allergies": [],
+      "vitals_history": [
+        {
+          "date": "2026-06-01",
+          "blood_pressure": "146/91",
+          "heart_rate": 80,
+          "glucose": 102,
+          "weight_kg": 92.5,
+          "spo2": 97,
+          "notes": "Baseline visit, weight management discussed"
+        },
+        {
+          "date": "2026-07-01",
+          "blood_pressure": "140/88",
+          "heart_rate": 78,
+          "glucose": 99,
+          "weight_kg": 90.8,
+          "spo2": 97,
+          "notes": "Modest weight loss, BP improving"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Losartan",
+          "dose": "50mg",
+          "frequency": "once daily",
+          "adherence_notes": "Good adherence, no missed doses"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-01",
+          "test": "Total Cholesterol",
+          "value": 210,
+          "unit": "mg/dL",
+          "reference_range": "<200"
+        }
+      ],
+      "alerts": [],
+      "visit_history": [
+        {
+          "date": "2026-06-01",
+          "type": "Home visit",
+          "summary": "Enrollment visit, discussed weight management goals"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Lose 5kg over 6 months",
+          "Reduce blood pressure below 135/85"
+        ],
+        "next_appointment": "2026-08-01"
+      }
+    },
+    {
+      "patient_id": "PT-1010",
+      "full_name": "Davide Colombo",
+      "date_of_birth": "1970-08-19",
+      "sex": "M",
+      "conditions": [
+        "Type 2 Diabetes"
+      ],
+      "assigned_nurse": "Sofia Greco",
+      "assigned_doctor": "Andrea Colombo",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-05-20",
+      "contact": {
+        "phone": "+39 320 774 5561",
+        "email": "davide.colombo@example.com",
+        "address": "Via Torino 7, Vimercate (MB)"
+      },
+      "emergency_contact": {
+        "name": "Martina Colombo",
+        "relationship": "Wife",
+        "phone": "+39 320 774 5562"
+      },
+      "insurance": {
+        "provider": "INPS Assistenza Sanitaria",
+        "policy_number": "INPS-77304421"
+      },
+      "allergies": [
+        "Sulfa drugs"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-20",
+          "blood_pressure": "128/82",
+          "heart_rate": 72,
+          "glucose": 165,
+          "weight_kg": 82.0,
+          "spo2": 98,
+          "notes": "Newly diagnosed, starting metformin"
+        },
+        {
+          "date": "2026-06-20",
+          "blood_pressure": "126/80",
+          "heart_rate": 70,
+          "glucose": 142,
+          "weight_kg": 81.2,
+          "spo2": 98,
+          "notes": "Good early response to treatment"
+        },
+        {
+          "date": "2026-07-20",
+          "blood_pressure": "124/79",
+          "heart_rate": 71,
+          "glucose": 130,
+          "weight_kg": 80.5,
+          "spo2": 98,
+          "notes": "Continuing to improve, adherent to diet plan"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Metformin",
+          "dose": "850mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Excellent adherence since starting therapy"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-20",
+          "test": "HbA1c",
+          "value": 6.8,
+          "unit": "%",
+          "reference_range": "4.0-5.6"
+        }
+      ],
+      "alerts": [],
+      "visit_history": [
+        {
+          "date": "2026-05-20",
+          "type": "Home visit",
+          "summary": "New diabetes diagnosis, initial education session"
+        },
+        {
+          "date": "2026-07-20",
+          "type": "Telehealth",
+          "summary": "Follow-up, glucose trending toward target"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Reduce HbA1c below 6.5%"
+        ],
+        "next_appointment": "2026-08-20"
+      }
+    },
+    {
+      "patient_id": "PT-1011",
+      "full_name": "Teresa Fontana",
+      "date_of_birth": "1942-10-11",
+      "sex": "F",
+      "conditions": [
+        "Chronic Heart Failure",
+        "Chronic Kidney Disease Stage 3",
+        "Hypertension"
+      ],
+      "assigned_nurse": "Sofia Greco",
+      "assigned_doctor": "Marco Rossi",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-01-15",
+      "contact": {
+        "phone": "+39 366 552 8814",
+        "email": "teresa.fontana@example.com",
+        "address": "Via Firenze 3, Vimercate (MB)"
+      },
+      "emergency_contact": {
+        "name": "Roberto Fontana",
+        "relationship": "Son",
+        "phone": "+39 366 552 8815"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-90112456"
+      },
+      "allergies": [
+        "Iodine contrast",
+        "Penicillin"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-02",
+          "blood_pressure": "138/86",
+          "heart_rate": 74,
+          "glucose": null,
+          "weight_kg": 66.5,
+          "spo2": 94,
+          "notes": "Stable, mild peripheral edema"
+        },
+        {
+          "date": "2026-06-02",
+          "blood_pressure": "142/89",
+          "heart_rate": 77,
+          "glucose": null,
+          "weight_kg": 68.2,
+          "spo2": 92,
+          "notes": "Weight increasing, edema worsening"
+        },
+        {
+          "date": "2026-07-02",
+          "blood_pressure": "148/92",
+          "heart_rate": 81,
+          "glucose": null,
+          "weight_kg": 69.8,
+          "spo2": 91,
+          "notes": "Continued fluid retention, referred for urgent review"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Furosemide",
+          "dose": "40mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Adherence uncertain, family reports occasional missed doses"
+        },
+        {
+          "name": "Carvedilol",
+          "dose": "6.25mg",
+          "frequency": "twice daily",
+          "adherence_notes": "Consistent adherence per caregiver report"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-06-25",
+          "test": "eGFR",
+          "value": 38,
+          "unit": "mL/min/1.73m2",
+          "reference_range": ">90"
+        },
+        {
+          "date": "2026-06-25",
+          "test": "BNP",
+          "value": 610,
+          "unit": "pg/mL",
+          "reference_range": "<100"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-07-02",
+          "severity": "high",
+          "message": "Progressive weight gain and worsening edema — possible CHF/renal decompensation",
+          "resolved": false
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-05-02",
+          "type": "Home visit",
+          "summary": "Routine multi-condition monitoring"
+        },
+        {
+          "date": "2026-07-03",
+          "type": "Urgent home visit",
+          "summary": "Escalated due to worsening edema, care team notified"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Prevent hospitalization for CHF/CKD decompensation",
+          "Improve caregiver-supported medication adherence"
+        ],
+        "next_appointment": "2026-07-18"
+      }
+    },
+    {
+      "patient_id": "PT-1012",
+      "full_name": "Michele Rinaldi",
+      "date_of_birth": "1965-05-03",
+      "sex": "M",
+      "conditions": [
+        "Hypertension",
+        "Hyperlipidemia"
+      ],
+      "assigned_nurse": "Giulia Bianchi",
+      "assigned_doctor": "Sara Greco",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-04-10",
+      "contact": {
+        "phone": "+39 351 220 9987",
+        "email": "michele.rinaldi@example.com",
+        "address": "Via Bologna 25, Monza (MB)"
+      },
+      "emergency_contact": {
+        "name": "Chiara Rinaldi",
+        "relationship": "Wife",
+        "phone": "+39 351 220 9988"
+      },
+      "insurance": {
+        "provider": "INPS Assistenza Sanitaria",
+        "policy_number": "INPS-44117723"
+      },
+      "allergies": [],
+      "vitals_history": [
+        {
+          "date": "2026-05-10",
+          "blood_pressure": "134/86",
+          "heart_rate": 76,
+          "glucose": 105,
+          "weight_kg": 85.0,
+          "spo2": 98,
+          "notes": "Stable, good response to statin therapy"
+        },
+        {
+          "date": "2026-06-10",
+          "blood_pressure": "130/84",
+          "heart_rate": 74,
+          "glucose": 101,
+          "weight_kg": 84.5,
+          "spo2": 98,
+          "notes": "Continued improvement"
+        },
+        {
+          "date": "2026-07-10",
+          "blood_pressure": "128/82",
+          "heart_rate": 73,
+          "glucose": 100,
+          "weight_kg": 84.0,
+          "spo2": 98,
+          "notes": "Well controlled on current regimen"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Atorvastatin",
+          "dose": "20mg",
+          "frequency": "once nightly",
+          "adherence_notes": "Consistent adherence, pharmacy refills on schedule"
+        },
+        {
+          "name": "Amlodipine",
+          "dose": "5mg",
+          "frequency": "once daily",
+          "adherence_notes": "Consistent adherence"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-07-05",
+          "test": "LDL Cholesterol",
+          "value": 98,
+          "unit": "mg/dL",
+          "reference_range": "<100"
+        }
+      ],
+      "alerts": [],
+      "visit_history": [
+        {
+          "date": "2026-05-10",
+          "type": "Home visit",
+          "summary": "Routine chronic care check-in"
+        },
+        {
+          "date": "2026-07-10",
+          "type": "Telehealth",
+          "summary": "Routine follow-up, no concerns"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Maintain LDL below 100 mg/dL",
+          "Maintain blood pressure under 130/85"
+        ],
+        "next_appointment": "2026-09-10"
+      }
+    },
+    {
+      "patient_id": "PT-1013",
+      "full_name": "Elena Moretti",
+      "date_of_birth": "1953-09-28",
+      "sex": "F",
+      "conditions": [
+        "COPD",
+        "Osteoporosis"
+      ],
+      "assigned_nurse": "Elena Marino",
+      "assigned_doctor": "Andrea Colombo",
+      "care_program": "Chronic Care Home Monitoring",
+      "enrollment_date": "2026-03-25",
+      "contact": {
+        "phone": "+39 339 662 1145",
+        "email": "elena.moretti@example.com",
+        "address": "Via Palermo 8, Seregno (MB)"
+      },
+      "emergency_contact": {
+        "name": "Giorgio Moretti",
+        "relationship": "Husband",
+        "phone": "+39 339 662 1146"
+      },
+      "insurance": {
+        "provider": "ASL Brianza Mutua",
+        "policy_number": "ASLB-33119987"
+      },
+      "allergies": [
+        "Codeine"
+      ],
+      "vitals_history": [
+        {
+          "date": "2026-05-15",
+          "blood_pressure": "122/78",
+          "heart_rate": 80,
+          "glucose": null,
+          "weight_kg": 58.0,
+          "spo2": 93,
+          "notes": "Stable respiratory status, mild back pain reported"
+        },
+        {
+          "date": "2026-06-15",
+          "blood_pressure": "120/76",
+          "heart_rate": 78,
+          "glucose": null,
+          "weight_kg": 57.6,
+          "spo2": 94,
+          "notes": "Started calcium/vitamin D supplementation"
+        },
+        {
+          "date": "2026-07-15",
+          "blood_pressure": "121/77",
+          "heart_rate": 79,
+          "glucose": null,
+          "weight_kg": 57.8,
+          "spo2": 94,
+          "notes": "Stable, no fractures or falls reported"
+        }
+      ],
+      "medications": [
+        {
+          "name": "Tiotropium inhaler",
+          "dose": "18mcg",
+          "frequency": "once daily",
+          "adherence_notes": "Good adherence and technique"
+        },
+        {
+          "name": "Calcium + Vitamin D",
+          "dose": "600mg/400IU",
+          "frequency": "once daily",
+          "adherence_notes": "Newly started, adherence being monitored"
+        }
+      ],
+      "labs": [
+        {
+          "date": "2026-06-10",
+          "test": "Bone Density (T-score)",
+          "value": -2.7,
+          "unit": "SD",
+          "reference_range": ">-1.0"
+        }
+      ],
+      "alerts": [
+        {
+          "date": "2026-05-20",
+          "severity": "low",
+          "message": "Reported mild lower back pain, monitoring for fall risk",
+          "resolved": true
+        }
+      ],
+      "visit_history": [
+        {
+          "date": "2026-05-15",
+          "type": "Home visit",
+          "summary": "Routine respiratory check plus bone health assessment"
+        },
+        {
+          "date": "2026-06-10",
+          "type": "Clinic visit",
+          "summary": "Bone density scan reviewed, supplementation started"
+        }
+      ],
+      "care_plan": {
+        "goals": [
+          "Prevent falls/fractures",
+          "Maintain stable respiratory status"
+        ],
+        "next_appointment": "2026-08-15"
+      }
+    }
+  ]
+}

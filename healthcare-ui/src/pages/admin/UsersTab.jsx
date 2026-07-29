@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { listUsersApi, createUserApi, disableUserApi, enableUserApi, unlockUserApi } from '../../services/authApi';
 
+const ROLE_LABELS = { admin: 'Amministratore', nurse: 'Infermiere', doctor: 'Medico' };
+const ROLE_BADGE_CLASSES = {
+  admin: 'bg-navy/10 text-navy',
+  nurse: 'bg-teal/10 text-teal',
+  doctor: 'bg-warning/10 text-warning',
+};
+
 export default function UsersTab() {
   const { accessToken } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ username: '', password: '', full_name: '', designation: '', role: 'operator' });
+  const [form, setForm] = useState({ username: '', password: '', full_name: '', designation: '', role: 'nurse' });
   const [formError, setFormError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
 
@@ -36,7 +43,7 @@ export default function UsersTab() {
     try {
       await createUserApi(form, accessToken);
       setShowForm(false);
-      setForm({ username: '', password: '', full_name: '', designation: '', role: 'operator' });
+      setForm({ username: '', password: '', full_name: '', designation: '', role: 'nurse' });
       await loadUsers();
     } catch (err) {
       setFormError(err.response?.data?.detail || 'Errore nella creazione utente.');
@@ -91,7 +98,7 @@ export default function UsersTab() {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-base font-semibold text-gray-800">
           Gestione Utenti
-          <span className="ml-2 text-xs font-normal text-gray-400">{adminCount} admin · {users.length - adminCount} operatori</span>
+          <span className="ml-2 text-xs font-normal text-gray-400">{adminCount} admin · {users.length - adminCount} clinici</span>
         </h2>
         <button
           onClick={() => setShowForm(!showForm)}
@@ -157,7 +164,8 @@ export default function UsersTab() {
                 value={form.role}
                 onChange={e => setForm({ ...form, role: e.target.value })}
               >
-                <option value="operator">Operatore</option>
+                <option value="nurse">Infermiere</option>
+                <option value="doctor">Medico</option>
                 <option value="admin">Amministratore</option>
               </select>
             </div>
@@ -202,11 +210,9 @@ export default function UsersTab() {
                 <td className="px-4 py-3 text-gray-500">{u.designation || '—'}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                    u.role === 'admin'
-                      ? 'bg-navy/10 text-navy'
-                      : 'bg-teal/10 text-teal'
+                    ROLE_BADGE_CLASSES[u.role] || 'bg-gray-100 text-gray-600'
                   }`}>
-                    {u.role === 'admin' ? 'Admin' : 'Operatore'}
+                    {ROLE_LABELS[u.role] || u.role}
                   </span>
                 </td>
                 <td className="px-4 py-3">

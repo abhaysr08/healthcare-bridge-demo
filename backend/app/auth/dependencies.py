@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 from .database import get_db
 from .security import decode_access_token
+from .roles import Role, ALL_ROLES
 
 security = HTTPBearer()
 
@@ -29,12 +30,24 @@ async def get_current_user(
 
 
 def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
-    if current_user["role"] != "admin":
+    if current_user["role"] != Role.ADMIN.value:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accesso riservato agli amministratori")
     return current_user
 
 
-def require_operator_or_admin(current_user: dict = Depends(get_current_user)) -> dict:
-    if current_user["role"] not in ("admin", "operator"):
+def require_nurse(current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user["role"] not in (Role.NURSE.value, Role.ADMIN.value):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accesso riservato agli infermieri")
+    return current_user
+
+
+def require_doctor(current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user["role"] not in (Role.DOCTOR.value, Role.ADMIN.value):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accesso riservato ai medici")
+    return current_user
+
+
+def require_clinical_or_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    if current_user["role"] not in ALL_ROLES:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permessi insufficienti")
     return current_user

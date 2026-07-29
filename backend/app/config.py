@@ -27,6 +27,15 @@ if not os.path.exists(aurora_data_path):
     aurora_data_path = str(Path(__file__).parent.parent / "data" / "real-patient.json")
 AURORA_DATA_PATH = aurora_data_path
 
+# Patient data schema selector for the RAG store: "chronic_care" (demo dataset,
+# default) or "aurora" (real hospital registry export, see AURORA_DATA_PATH above)
+PATIENT_DATA_SCHEMA = os.getenv("PATIENT_DATA_SCHEMA", "chronic_care")
+
+chronic_care_data_path = os.getenv("CHRONIC_CARE_DATA_PATH", "/app/data/chronic-care-patients.json")
+if not os.path.exists(chronic_care_data_path):
+    chronic_care_data_path = str(Path(__file__).parent.parent / "data" / "chronic-care-patients.json")
+CHRONIC_CARE_DATA_PATH = chronic_care_data_path
+
 # Registry API configuration - fully dynamic, no mock data
 REGISTRY_API_URL = os.getenv("REGISTRY_API_URL", "https://clumiddle.aodv.local/AC/pac/rest/paziente")
 REGISTRY_API_TIMEOUT = int(os.getenv("REGISTRY_API_TIMEOUT", "30"))
@@ -66,7 +75,9 @@ ADMIN_FULL_NAME = os.getenv("ADMIN_FULL_NAME", "Amministratore Sistema")
 def get_config_summary() -> dict:
     return {
         "model": MODEL_NAME,
+        "patient_data_schema": PATIENT_DATA_SCHEMA,
         "aurora_data_path": AURORA_DATA_PATH,
+        "chronic_care_data_path": CHRONIC_CARE_DATA_PATH,
         "registry_api": {
             "url": REGISTRY_API_URL,
             "enabled": REGISTRY_API_ENABLED,

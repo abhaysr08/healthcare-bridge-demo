@@ -8,6 +8,7 @@ from .models import UserCreate, UserPublic, AuditLogEntry
 from .security import hash_password
 from .dependencies import require_admin
 from .audit import log_action
+from .roles import ALL_ROLES
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -20,8 +21,8 @@ async def create_user(
     current_user=Depends(require_admin),
     db=Depends(get_db)
 ):
-    if body.role not in ("admin", "operator"):
-        raise HTTPException(status_code=400, detail="Ruolo non valido. Usa 'admin' o 'operator'")
+    if body.role not in ALL_ROLES:
+        raise HTTPException(status_code=400, detail=f"Ruolo non valido. Usa uno tra: {', '.join(ALL_ROLES)}")
     if len(body.password) < 12:
         raise HTTPException(status_code=400, detail="La password deve essere di almeno 12 caratteri")
 

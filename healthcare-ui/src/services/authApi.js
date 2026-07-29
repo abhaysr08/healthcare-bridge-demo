@@ -98,3 +98,25 @@ export async function getAuditLogsApi(params, token) {
   });
   return res.data;
 }
+
+// Dashboard APIs
+export async function getNurseDashboardApi(token) {
+  const res = await api.get('/dashboard/nurse', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+export async function getDoctorDashboardApi(token) {
+  const res = await api.get('/dashboard/doctor', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+export async function getPatientApi(patientId, token) {
+  const res = await api.get(`/patients/${patientId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}

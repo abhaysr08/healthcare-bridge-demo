@@ -1,6 +1,7 @@
 import logging
 from ..config import ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_FULL_NAME
 from .security import hash_password
+from .roles import Role
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
     hashed_password      VARCHAR(255) NOT NULL,
     full_name            VARCHAR(255) NOT NULL,
     designation          VARCHAR(255),
-    role                 VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'operator')),
+    role                 VARCHAR(20) NOT NULL,
     is_active            BOOLEAN NOT NULL DEFAULT TRUE,
     is_locked            BOOLEAN NOT NULL DEFAULT FALSE,
     failed_login_count   INTEGER NOT NULL DEFAULT 0,
@@ -52,6 +53,15 @@ async def initialize_database(pool):
         await conn.execute(CREATE_TABLES_SQL)
         logger.info("Auth tables verified/created")
 
+        # Migrate legacy 'operator' role to 'nurse', then enforce the current role set
+        await conn.execute("UPDATE users SET role = 'nurse' WHERE role = 'operator'")
+        await conn.execute("ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check")
+        await conn.execute(
+            f"ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN "
+            f"({', '.join(repr(r) for r in (Role.ADMIN.value, Role.NURSE.value, Role.DOCTOR.value))}))"
+        )
+        logger.info("Role constraint verified (admin, nurse, doctor)")
+
         # Seed admin if no users exist
         count = await conn.fetchval("SELECT COUNT(*) FROM users")
         if count == 0:
@@ -69,3 +79,20 @@ async def initialize_database(pool):
                 ADMIN_FULL_NAME,
             )
             logger.info(f"Admin account seeded: username='{ADMIN_USERNAME}'")
+
+            demo_users = [
+                ("nurse.demo", "NurseDemo2026!", "Giulia Bianchi", Role.NURSE.value),
+                ("doctor.demo", "DoctorDemo2026!", "Marco Rossi", Role.DOCTOR.value),
+            ]
+            for username, password, full_name, role in demo_users:
+                await conn.execute(
+                    """
+                    INSERT INTO users (username, hashed_password, full_name, role, must_change_password)
+                    VALUES ($1, $2, $3, $4, FALSE)
+                    """,
+                    username,
+                    hash_password(password),
+                    full_name,
+                    role,
+                )
+                logger.info(f"Demo {role} account seeded: username='{username}'")

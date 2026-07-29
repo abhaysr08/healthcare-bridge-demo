@@ -91,7 +91,7 @@ export function AuthProvider({ children }) {
     setUser(normalizedUser);
     setMustChangePassword(data.must_change_password);
     localStorage.setItem('hb_user', JSON.stringify(normalizedUser));
-    return { success: true, mustChangePassword: data.must_change_password };
+    return { success: true, mustChangePassword: data.must_change_password, role: normalizedUser.role };
   }, []);
 
   const logout = useCallback(async () => {

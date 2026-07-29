@@ -13,6 +13,8 @@ from .config import (
     MODEL_NAME,
     CHROMA_PERSIST_DIRECTORY,
     AURORA_DATA_PATH,
+    PATIENT_DATA_SCHEMA,
+    CHRONIC_CARE_DATA_PATH,
     REGISTRY_API_URL,
     REGISTRY_API_TIMEOUT,
     REGISTRY_API_ENABLED,
@@ -28,7 +30,7 @@ from .config import (
 )
 from .models import ChatRequest, ChatResponse
 from .vector_store import VectorStoreManager, create_rag_context
-from .utils import get_system_prompt
+from .utils import get_system_prompt, get_chronic_care_system_prompt
 from .services.registry_client import RegistryClient
 from .services.bof_client import BOFClient
 from .services.consolidated_client import ConsolidatedAPIClient
@@ -36,7 +38,7 @@ from .auth.database import get_pool, close_pool, get_db
 from .auth.init_db import initialize_database
 from .auth.router import router as auth_router
 from .auth.admin_router import router as admin_router
-from .auth.dependencies import require_operator_or_admin
+from .auth.dependencies import require_clinical_or_admin, require_nurse, require_doctor
 from .auth.audit import log_action
 
 logging.basicConfig(level=logging.INFO)
@@ -69,6 +71,12 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # RAG-based vector store as primary data source
 vector_store: Optional[VectorStoreManager] = None
+
+
+def build_system_prompt(patient_count: int) -> str:
+    if PATIENT_DATA_SCHEMA == "chronic_care":
+        return get_chronic_care_system_prompt(patient_count)
+    return get_system_prompt(patient_count)
 
 # External API clients for enrichment
 registry_client: Optional[RegistryClient] = None
@@ -121,12 +129,15 @@ async def startup_event():
             enabled=BOF_API_ENABLED and not CONSOLIDATED_API_ENABLED
         )
 
-        # Initialize RAG vector store with Aurora data
-        logger.info(f"Initializing RAG vector store from: {AURORA_DATA_PATH}")
+        # Initialize RAG vector store
+        data_path = CHRONIC_CARE_DATA_PATH if PATIENT_DATA_SCHEMA == "chronic_care" else AURORA_DATA_PATH
+        logger.info(f"Initializing RAG vector store ({PATIENT_DATA_SCHEMA}) from: {data_path}")
         vector_store = VectorStoreManager(
             openai_client=client,
             persist_directory=CHROMA_PERSIST_DIRECTORY,
-            aurora_data_path=AURORA_DATA_PATH
+            aurora_data_path=AURORA_DATA_PATH,
+            patient_data_schema=PATIENT_DATA_SCHEMA,
+            chronic_care_data_path=CHRONIC_CARE_DATA_PATH
         )
         vector_store.initialize_collection()
 
@@ -174,14 +185,14 @@ async def root():
 
 
 @app.get("/patients")
-async def get_patients(current_user=Depends(require_operator_or_admin)):
+async def get_patients(current_user=Depends(require_clinical_or_admin)):
     if not vector_store:
         raise HTTPException(status_code=503, detail="Vector store not initialized")
     return vector_store.get_all_patients()
 
 
 @app.get("/patients/{fiscal_code}")
-async def get_patient(fiscal_code: str, current_user=Depends(require_operator_or_admin)):
+async def get_patient(fiscal_code: str, current_user=Depends(require_clinical_or_admin)):
     if not vector_store:
         raise HTTPException(status_code=503, detail="Vector store not initialized")
 
@@ -191,6 +202,58 @@ async def get_patient(fiscal_code: str, current_user=Depends(require_operator_or
 
     enriched = await enrich_patient_data(fiscal_code, patient_data)
     return enriched
+
+
+@app.get("/dashboard/nurse")
+async def nurse_dashboard(current_user=Depends(require_nurse)):
+    if not vector_store:
+        raise HTTPException(status_code=503, detail="Vector store not initialized")
+
+    patients = vector_store.get_all_chronic_care_patients()
+    roster = []
+    for p in patients:
+        latest = p.get("latest_vitals") or {}
+        adherence_flag = any(
+            "missed" in med.get("adherence_notes", "").lower()
+            or "inconsistent" in med.get("adherence_notes", "").lower()
+            for med in p.get("medications", [])
+        )
+        roster.append({
+            "patient_id": p["patient_id"],
+            "full_name": p["full_name"],
+            "conditions": p["conditions"],
+            "assigned_doctor": p["assigned_doctor"],
+            "latest_vitals_summary": latest,
+            "vitals_history": p.get("vitals_history", []),
+            "unresolved_alert_count": p["unresolved_alert_count"],
+            "adherence_flag": adherence_flag,
+        })
+
+    roster.sort(key=lambda r: r["unresolved_alert_count"], reverse=True)
+    return {"roster": roster}
+
+
+@app.get("/dashboard/doctor")
+async def doctor_dashboard(current_user=Depends(require_doctor)):
+    if not vector_store:
+        raise HTTPException(status_code=503, detail="Vector store not initialized")
+
+    patients = vector_store.get_all_chronic_care_patients()
+    overview = []
+    for p in patients:
+        high_severity_alerts = [a for a in p.get("alerts", []) if a.get("severity") == "high" and not a.get("resolved")]
+        overview.append({
+            "patient_id": p["patient_id"],
+            "full_name": p["full_name"],
+            "conditions": p["conditions"],
+            "assigned_nurse": p["assigned_nurse"],
+            "latest_vitals_summary": p.get("latest_vitals"),
+            "vitals_history": p.get("vitals_history", []),
+            "escalations": high_severity_alerts,
+        })
+
+    overview.sort(key=lambda o: len(o["escalations"]), reverse=True)
+    return {"patients": overview}
 
 
 async def enrich_patient_data(fiscal_code: str, patient_data: dict) -> dict:
@@ -205,6 +268,11 @@ async def enrich_patient_data(fiscal_code: str, patient_data: dict) -> dict:
         'clinical_events': patient_data['events'],
         'sources': ['rag_vector_store']
     }
+
+    # The chronic-care demo dataset is fully self-contained fictional data —
+    # never call out to the real Registry/BOF/Consolidated APIs for it.
+    if PATIENT_DATA_SCHEMA == "chronic_care":
+        return enriched
 
     # Option 1: Use consolidated API (preferred - AI1 has internal access to everything)
     if consolidated_client and consolidated_client.enabled:
@@ -330,6 +398,13 @@ def is_patient_query(text: str) -> bool:
     if is_general_query(text_lower):
         return False
 
+    # The chronic-care demo dataset has no fiscal codes and covers free-form
+    # clinical questions ("is X worsening?", "who needs follow-up?") that don't
+    # fit a fixed keyword list — default to a RAG search for anything that
+    # isn't clearly a greeting/general-help query.
+    if PATIENT_DATA_SCHEMA == "chronic_care":
+        return True
+
     patient_keywords = [
         'patient', 'paziente', 'pazienti', 'patients',
         'tell me about', 'tell me something about', 'show me', 'mostrami', 'dimmi',
@@ -345,7 +420,7 @@ def is_patient_query(text: str) -> bool:
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest, req: Request, current_user=Depends(require_operator_or_admin), db=Depends(get_db)):
+async def chat(request: ChatRequest, req: Request, current_user=Depends(require_clinical_or_admin), db=Depends(get_db)):
     """
     RAG-based chat endpoint.
 
@@ -409,7 +484,7 @@ async def chat(request: ChatRequest, req: Request, current_user=Depends(require_
 
             context = f"\n\n**Patient Data:**\n```json\n{json.dumps(enriched, ensure_ascii=False, indent=2)}\n```"
 
-            messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
+            messages = [{"role": "system", "content": build_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
             for msg in request.conversation_history:
                 messages.append({"role": msg.role, "content": msg.content})
             messages.append({"role": "user", "content": request.message})
@@ -431,7 +506,7 @@ async def chat(request: ChatRequest, req: Request, current_user=Depends(require_
         if active_patient_context and not fiscal_code:
             logger.info(f"Follow-up question detected - reusing patient context from conversation history")
             context = f"\n\n**Patient Data (from previous context):**\n```json\n{json.dumps(active_patient_context, ensure_ascii=False, indent=2)}\n```"
-            messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
+            messages = [{"role": "system", "content": build_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
             for msg in request.conversation_history:
                 messages.append({"role": msg.role, "content": msg.content})
             messages.append({"role": "user", "content": request.message})
@@ -449,7 +524,16 @@ async def chat(request: ChatRequest, req: Request, current_user=Depends(require_
 
             if search_results:
                 # Get top result and enrich with external APIs
-                top_result = search_results[0] if search_results[0]['similarity'] >= 0.4 else None
+                best = search_results[0]
+                confident_match = best['similarity'] >= 0.4
+                if not confident_match and PATIENT_DATA_SCHEMA == "chronic_care":
+                    # Names are the natural lookup key for this dataset — if the
+                    # query explicitly names the top result's patient, trust it
+                    # even when the embedding similarity score is borderline.
+                    patient_name = (best['patient'].get('full_name') or '').lower()
+                    if patient_name and patient_name in request.message.lower():
+                        confident_match = True
+                top_result = best if confident_match else None
                 patient_context = None
                 context = ""
 
@@ -475,7 +559,7 @@ async def chat(request: ChatRequest, req: Request, current_user=Depends(require_
                     # Low confidence - show multiple options
                     context = create_rag_context(search_results, request.message)
 
-                messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
+                messages = [{"role": "system", "content": build_system_prompt(vector_store.get_patient_count()) + lang_instruction + context}]
                 for msg in request.conversation_history:
                     messages.append({"role": msg.role, "content": msg.content})
                 messages.append({"role": "user", "content": request.message})
@@ -487,13 +571,16 @@ async def chat(request: ChatRequest, req: Request, current_user=Depends(require_
                 return ChatResponse(response=response.choices[0].message.content, patient_context=patient_context)
             else:
                 # No results found
-                no_results_msg = "Non ho trovato pazienti corrispondenti. Prova con un codice fiscale specifico." if lang == 'it' else "No matching patients found. Please try with a specific fiscal code."
+                if PATIENT_DATA_SCHEMA == "chronic_care":
+                    no_results_msg = "Non ho trovato pazienti corrispondenti. Prova con il nome completo del paziente." if lang == 'it' else "No matching patients found. Try using the patient's full name."
+                else:
+                    no_results_msg = "Non ho trovato pazienti corrispondenti. Prova con un codice fiscale specifico." if lang == 'it' else "No matching patients found. Please try with a specific fiscal code."
                 return ChatResponse(response=no_results_msg, patient_context=None)
 
         # CASE 3: General query - respond without patient data
         logger.info("General query detected - responding without patient data")
 
-        messages = [{"role": "system", "content": get_system_prompt(vector_store.get_patient_count()) + lang_instruction}]
+        messages = [{"role": "system", "content": build_system_prompt(vector_store.get_patient_count()) + lang_instruction}]
         for msg in request.conversation_history:
             messages.append({"role": msg.role, "content": msg.content})
         messages.append({"role": "user", "content": request.message})
@@ -512,7 +599,7 @@ async def chat(request: ChatRequest, req: Request, current_user=Depends(require_
 
 
 @app.get("/search")
-async def search_patients(query: str, top_k: int = 5, current_user=Depends(require_operator_or_admin)):
+async def search_patients(query: str, top_k: int = 5, current_user=Depends(require_clinical_or_admin)):
     """
     RAG semantic search endpoint for patients.
     """

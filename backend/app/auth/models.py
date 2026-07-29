@@ -2,6 +2,8 @@ from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 
+from .roles import Role
+
 
 class LoginRequest(BaseModel):
     username: str
@@ -28,7 +30,7 @@ class UserCreate(BaseModel):
     password: str
     full_name: str
     designation: Optional[str] = None
-    role: str  # 'admin' or 'operator'
+    role: Role
 
 
 class ChangePasswordRequest(BaseModel):

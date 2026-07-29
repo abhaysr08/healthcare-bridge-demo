@@ -4,8 +4,18 @@ import ChatPage from './pages/ChatPage';
 import ProfilePage from './pages/ProfilePage';
 import ChangePasswordPage from './pages/ChangePasswordPage';
 import AdminPage from './pages/admin/AdminPage';
+import NurseDashboardPage from './pages/NurseDashboardPage';
+import DoctorDashboardPage from './pages/DoctorDashboardPage';
+import PatientDetailPage from './pages/PatientDetailPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminRoute from './components/auth/AdminRoute';
+import RoleRoute from './components/auth/RoleRoute';
+import { useAuth } from './contexts/AuthContext';
+import { getHomeRouteForRole } from './utils/roleRoutes';
+
+function RoleHome() {
+  const { user } = useAuth();
+  return <Navigate to={getHomeRouteForRole(user?.role)} replace />;
+}
 
 export default function App() {
   return (
@@ -38,12 +48,43 @@ export default function App() {
       <Route
         path="/admin"
         element={
-          <AdminRoute>
+          <RoleRoute allow={['admin']}>
             <AdminPage />
-          </AdminRoute>
+          </RoleRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/chat" replace />} />
+      <Route
+        path="/nurse"
+        element={
+          <RoleRoute allow={['nurse', 'admin']}>
+            <NurseDashboardPage />
+          </RoleRoute>
+        }
+      />
+      <Route
+        path="/doctor"
+        element={
+          <RoleRoute allow={['doctor', 'admin']}>
+            <DoctorDashboardPage />
+          </RoleRoute>
+        }
+      />
+      <Route
+        path="/patient/:patientId"
+        element={
+          <RoleRoute allow={['nurse', 'doctor', 'admin']}>
+            <PatientDetailPage />
+          </RoleRoute>
+        }
+      />
+      <Route
+        path="*"
+        element={
+          <ProtectedRoute>
+            <RoleHome />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

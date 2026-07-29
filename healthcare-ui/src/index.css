@@ -3,13 +3,43 @@
 @theme {
   --color-navy: #225884;
   --color-navy-dark: #1a4568;
-  --color-teal: #225884;
-  --color-teal-dark: #1a4568;
-  --color-teal-light: #2d6fa0;
+  --color-teal: #0d9488;
+  --color-teal-dark: #0f766e;
+  --color-teal-light: #14b8a6;
   --color-warning: #f59e0b;
   --color-warning-bg: #fef3c7;
   --color-error: #ef4444;
   --color-error-bg: #fef2f2;
   --color-chat-bg: #f5f7fb;
   --color-text-primary: #1C1C1C;
+
+  --shadow-card: 0 4px 20px -4px rgba(34, 88, 132, 0.15);
+  --shadow-card-hover: 0 12px 28px -6px rgba(34, 88, 132, 0.25);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.25s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s ease-out both;
+}
+
+.animate-pop-in {
+  animation: pop-in 0.18s ease-out both;
 }

@@ -21,9 +21,9 @@ const ChatInput = forwardRef(function ChatInput(
   }, []);
 
   return (
-    <div className="bg-white px-4 py-3 pb-4 shrink-0">
-      <div className="flex items-end gap-2 max-w-3xl mx-auto">
-        <div className="flex-1 bg-gray-100 rounded-2xl px-4 py-2.5 flex items-end border border-gray-200">
+    <div className="bg-white px-4 py-3 pb-4 shrink-0 border-t border-gray-100">
+      <div className="flex items-end gap-2">
+        <div className="flex-1 bg-gray-50 rounded-2xl px-4 py-2.5 flex items-end border border-gray-200 focus-within:ring-2 focus-within:ring-teal/30 focus-within:border-teal transition-shadow">
           <textarea
             ref={ref}
             value={value}
@@ -45,7 +45,7 @@ const ChatInput = forwardRef(function ChatInput(
           onClick={onSend}
           disabled={disabled || !value.trim()}
           className="w-10 h-10 rounded-full bg-teal text-white flex items-center justify-center
-                     shrink-0 hover:bg-teal-dark transition-colors
+                     shrink-0 hover:bg-teal-dark hover:shadow-lg active:scale-90 transition-all
                      disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           <svg

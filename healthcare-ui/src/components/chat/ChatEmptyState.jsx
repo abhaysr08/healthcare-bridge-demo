@@ -2,11 +2,11 @@ import avatarImg from '../../assets/avatar-nurse.svg';
 
 export default function ChatEmptyState({ userName }) {
   return (
-    <div className="flex flex-col items-center justify-center flex-1 text-center px-4">
+    <div className="flex flex-col items-center text-center py-10 animate-fade-in">
       <img
         src={avatarImg}
         alt="Avatar"
-        className="w-20 h-20 rounded-full mb-4 object-cover"
+        className="w-20 h-20 rounded-full mb-4 object-cover shadow-card"
       />
       <h2 className="text-xl font-semibold text-gray-800">
         Buongiorno {userName}
